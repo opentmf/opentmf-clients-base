@@ -1,0 +1,123 @@
+{
+  "@type": "ServiceCreate",
+  "description": "gsipGeoNumberSS",
+  "name": "gsipGeoNumberSS",
+  "startMode": "1",
+  "place": [
+    {
+      "role": "Service Place",
+      "city": "Brighton",
+      "country": "GB",
+      "postcode": "BN1 4RU",
+      "stateOrProvince": "LondonGreatArea",
+      "streetName": "Trafalgae Place",
+      "streetNr": "3",
+      "streetType": "string",
+      "geographicSubAddress": [
+        {
+          "buildingName": "Lanchester House",
+          "@type": "GeographicSubAddress"
+        }
+      ],
+      "@type": "GeographicAddress"
+    }
+  ],
+  "serviceCharacteristic": [
+    {
+      "id": "bulkQuantity",
+      "name": "bulkQuantity",
+      "valueType": "number",
+      "value": 3
+    },
+    {
+      "id": "nomadicNumber",
+      "name": "nomadicNumber",
+      "valueType": "boolean",
+      "value": false
+    },
+    {
+      "id": "numberPortingRequired",
+      "name": "numberPortingRequired",
+      "valueType": "boolean",
+      "value": false
+    },
+    {
+      "id": "rangeStartNumber",
+      "name": "rangeStartNumber",
+      "valueType": "string",
+      "value": "555001"
+    },
+    {
+      "id": "rangeEndNumber",
+      "name": "rangeEndNumber",
+      "valueType": "string",
+      "value": "555-099"
+    },
+    {
+      "id": "losingServiceProviderName",
+      "name": "losingServiceProviderName",
+      "valueType": "string",
+      "value": "BT"
+    },
+    {
+      "id": "desiredPortingDate",
+      "name": "desiredPortingDate",
+      "valueType": "date",
+      "value": "2024-02-04"
+    },
+    {
+      "id": "serviceProvider",
+      "name": "serviceProvider",
+      "valueType": "string",
+      "value": "TATA"
+    },
+    {
+      "id": "vendorAccountId",
+      "name": "vendorAccountId",
+      "valueType": "string",
+      "value": "123456"
+    },
+    {
+      "id": "digicomOrderId",
+      "name": "digicomOrderId",
+      "valueType": "string",
+      "value": "ORD000001"
+    },
+    {
+      "id": "digicomOrderItemId",
+      "name": "digicomOrderItemId",
+      "valueType": "string",
+      "value": "ORDITM000001"
+    },
+    {
+      "id": "digicomProductInstanceId",
+      "name": "digicomProductInstanceId",
+      "valueType": "string",
+      "value": "INST000001"
+    }
+  ],
+  "serviceOrderItem": [
+    {
+      "itemId": "888aae71-7cbd-4dbd-8046-cdd36f15fda6",
+      "serviceOrderId": "62e3a4623d15ca0006d04630",
+      "itemAction": "add",
+      "@type": "ServiceOrderItem"
+    }
+  ],
+  "serviceSpecification": {
+    "id": "gsipGeoNumberSS",
+    "href": "/tmf-api/serviceCatalogManagement/v4/serviceSpecification/GSIPGeoNumberSS",
+    "name": "GSIPGeoNumberSS",
+    "@type": "ServiceSpecification"
+  },
+  "state": "active",
+  "supportingResource": [
+    {
+      "id": "1",
+      "href": "1",
+      "name": "+12345678901",
+      "@baseType": "ResourceSpecification",
+      "@type": "ResourceSpecification"
+    }
+  ]
+}

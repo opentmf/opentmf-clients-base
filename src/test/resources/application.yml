@@ -1,0 +1,96 @@
+pia:
+  webclient:
+    openid:
+      sh-client:
+        connection-provider-name: sh-client
+        fixed-headers:
+          application: tmf641-soa
+        token-config:
+          use-mock: true
+          cache-name: sh-client-cache
+          cache-expiry-seconds: 10
+          token-url: https://localhost:1080/sh/auth2/token
+          basic-auth-username: myClientId
+          basic-auth-password: mySecret
+          form-data:
+            username: myUsername
+            password: myPassword
+            grant-type: password
+            scope: openid
+      apix-client:
+        connection-provider-name: apix-client
+        fixed-headers:
+          application: tmf641-soa
+        token-config:
+          use-mock: true
+          cache-name: apix-client-cache
+          cache-expiry-seconds: 10
+          token-url: https://localhost:1080/sh/auth2/token
+          basic-auth-username: myClientId
+          basic-auth-password: mySecret
+          form-data:
+            username: myUsername
+            password: myPassword
+            grant-type: password
+            scope: openid
+      dxl-client:
+        connection-provider-name: apix-client
+        fixed-headers:
+          application: tmf641-soa
+        token-config:
+          use-mock: true
+          cache-name: dxl-client-cache
+          cache-expiry-seconds: 10
+          token-url: https://localhost:1080/sh/auth2/token
+          basic-auth-username: myClientId
+          basic-auth-password: mySecret
+          form-data:
+            username: myUsername
+            password: myPassword
+            grant-type: password
+            scope: openid
+    basic:
+      basic-client:
+        connection-provider-name: basic-client
+        token-config:
+          username: user
+          password: pass
+
+  tmf-clients:
+    sh-tmf-x-client:
+      base-url: http://sh-client
+      endpoint: /test
+      scopes:
+        get: SH_GET_TMF_MODEL
+        list: SH_GET_LIST_TMF_MODEL
+        post: SH_POST_TMF_MODEL
+        patch: SH_PATCH_TMF_MODEL
+        delete: SH_DELETE_TMF_MODEL
+      fixed-headers:
+        client: testTmfClient
+
+    sh-hub-client:
+      base-url: http://sh-hub-client
+      endpoint: /hub
+      scopes:
+        get: SH_GET_TMF_MODEL
+        delete: SH_DELETE_TMF_MODEL
+      fixed-headers:
+        application: test-app
+
+    apix-tmf-x-client:
+      base-url: http://apix-client
+      endpoint: /test
+      scopes:
+        post: APIX_CREATE_TMF_MODEL
+      fixed-headers:
+        application: /tmf641-soa
+
+    dxl-tmf-x-client:
+      base-url: http://dxl-client
+      endpoint: /deleteX
+      scopes:
+        post: DXL_CREATE_TMF_MODEL
+      fixed-headers:
+        application: tmf641-soa
+
