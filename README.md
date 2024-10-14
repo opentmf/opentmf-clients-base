@@ -269,4 +269,7 @@ Any TMF Client Provider will include this dependency. However, if your use case 
 </dependency>
 ```
 ## Version History
-- 1.0.0: Initial Version
+### 1.0.0
+- Initial Version
+### 1.0.1
+- Updates pia-webclients to version 1.0.4.
