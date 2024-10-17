@@ -27,7 +27,7 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
-		<pia-webclients.version>1.0.4</pia-webclients.version>
+		<pia-webclients.version>1.0.5</pia-webclients.version>
 		<json-path.version>2.9.0</json-path.version>
 		<json-patch.version>1.13</json-patch.version>
 		<mockserver.version>5.15.0</mockserver.version>

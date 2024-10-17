@@ -7,7 +7,6 @@ pia:
           application: tmf641-soa
         token-config:
           use-mock: true
-          cache-name: sh-client-cache
           cache-expiry-seconds: 10
           token-url: https://localhost:1080/sh/auth2/token
           basic-auth-username: myClientId
@@ -23,7 +22,6 @@ pia:
           application: tmf641-soa
         token-config:
           use-mock: true
-          cache-name: apix-client-cache
           cache-expiry-seconds: 10
           token-url: https://localhost:1080/sh/auth2/token
           basic-auth-username: myClientId
@@ -39,7 +37,6 @@ pia:
           application: tmf641-soa
         token-config:
           use-mock: true
-          cache-name: dxl-client-cache
           cache-expiry-seconds: 10
           token-url: https://localhost:1080/sh/auth2/token
           basic-auth-username: myClientId

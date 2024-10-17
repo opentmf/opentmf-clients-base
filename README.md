@@ -272,4 +272,6 @@ Any TMF Client Provider will include this dependency. However, if your use case 
 ### 1.0.0
 - Initial Version
 ### 1.0.1
-- Updates pia-webclients to version 1.0.4.
+- Updates pia-webclients to version 1.0.4
+### 1.0.2
+- Updates pia-webclients to version 1.0.5
