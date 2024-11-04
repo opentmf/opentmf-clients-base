@@ -27,7 +27,7 @@ public class TmfClientConfigurations {
   public static class TmfClientConfig {
 
     /**
-     * The optional baseUrl for this client.
+     * The mandatory baseUrl for this client.
      */
     @NotBlank
     private String baseUrl;

@@ -205,26 +205,20 @@ GenericClientProvider uses String as the Create, Update and Result class types, 
 
 > **Note:** The methods that return Flux are not supported in the GenericClientProvider, because the reactive web client cannot distinguish multiple returned objects when specifying String as the result class. Because of that, the Flux returning methods of the TmfClient interface will throw an UnsupportedOperationException.
 
-Here is an example to use the GenericClient with the previously conf,gured `default` web client:
+Here is an example to use the GenericClient with the previously configured `default` web client:
 
 ```java
 @Configuration
-@RequiredArgsConstructor
 @EnableConfigurationProperties(TmfClientConfigurations.class)
 public class GenericClientConfig {
 
-  private final GenericClientProvider genericClientProvider;
-  private final TmfClientConfigurations tmfClientConfigurations;
-
   @Bean
-  public TmfClientConfig anotherTmfClientConfig() {
-    return tmfClientConfigurations.getTmfClients().get("another-tmf-client");
-  }
-
-  @Bean
-  public GenericClient genericTestClient(@Qualifier("anotherTmfClientConfig")
-    TmfClientConfig anotherTmfClientConfig) {
-    return genericClientProvider.getTmfClient(testTmfClientConfig, "default");
+  public GenericClient genericTestClient(
+      GenericClientProvider genericClientProvider,
+      TmfClientConfigurations tmfClientConfigurations) {
+    return genericClientProvider.getTmfClient(
+        tmfClientConfigurations.getTmfClients()
+            .get("another-tmf-client"), "default");
   }
 }
 ```
@@ -241,7 +235,7 @@ public class AnotherServiceImpl implements AnotherService {
   @Override
   public void anotherMethod() {
     // For example
-    String jsonResult = genericTestClient.get("1");
+    Mono<String> jsonResult = genericTestClient.get("1");
     // ...
   }
 }
@@ -275,3 +269,7 @@ Any TMF Client Provider will include this dependency. However, if your use case 
 - Updates pia-webclients to version 1.0.4
 ### 1.0.2
 - Updates pia-webclients to version 1.0.5
+### 1.0.3
+- Updates pia-webclients to version 1.0.6
+- Updates documentation
+
