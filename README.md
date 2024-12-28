@@ -272,4 +272,6 @@ Any TMF Client Provider will include this dependency. However, if your use case 
 ### 1.0.3
 - Updates pia-webclients to version 1.0.6
 - Updates documentation
-
+### 1.0.4
+- Updates to pia-web-clients 1.0.8, for fewer dependencies for the reactive WebClient.
+- Updates Spring Boot version to 3.4.1
