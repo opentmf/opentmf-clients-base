@@ -1,21 +1,20 @@
 package com.pia.tmf.common.service;
 
 import static com.pia.commons.util.JacksonUtil.jsonToObject;
+import static com.pia.tmf.common.helper.MockServerUtils.addDataToMockServerCache;
+import static com.pia.tmf.common.service.MockServerHelper.addingMockServerData;
+import static com.pia.tmf.common.service.MockServerHelper.getTestData;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.fge.jackson.jsonpointer.JsonPointer;
 import com.github.fge.jackson.jsonpointer.JsonPointerException;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.github.fge.jsonpatch.ReplaceOperation;
-import com.pia.commons.util.JacksonUtil;
-import com.pia.mockserver.callback.DynamicPostCallback;
 import com.pia.tmf.common.config.TestClientAutoConfiguration;
 import com.pia.tmf.common.config.TestClientProvider;
 import com.pia.tmf.common.config.TestTmfClient;
@@ -26,14 +25,11 @@ import com.pia.tmf.common.model.RetrievalContext;
 import com.pia.tmf.common.model.TmfOffsetRequest;
 import com.pia.tmf.common.model.TmfPage;
 import java.util.List;
-import java.util.Random;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.model.Headers;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -48,7 +44,7 @@ import reactor.test.StepVerifier;
 @Import(TestClientAutoConfiguration.class)
 class TestTmfClientIT {
 
-  private String TEST_PATH;
+  private String path;
   private static final String SH_TMF_CLIENTS = "sh-tmf-x-client";
   private static final String ID_JSON_FILTER = "$.id";
   private static final RetrievalContext ID_RETRIEVAL_CONTEXT =
@@ -61,11 +57,11 @@ class TestTmfClientIT {
 
   @BeforeEach
   void beforeEach() {
-    TEST_PATH = "/" + RandomStringUtils.randomNumeric(5);
+    path = "/" + RandomStringUtils.secure().nextAlphabetic(5);
 
     var shClientConfig = tmfClientConfigurations.getTmfClients().get(SH_TMF_CLIENTS);
     shClientConfig.setBaseUrl(MockServerUtils.BASE_URL);
-    shClientConfig.setEndpoint(TEST_PATH);
+    shClientConfig.setEndpoint(path);
     testTmfClient =
         testClientProvider.getTmfClient(
             tmfClientConfigurations.getTmfClients().get(SH_TMF_CLIENTS), "sh");
@@ -76,8 +72,8 @@ class TestTmfClientIT {
   @Test
   void test_get_withValidId_shouldReturnOkay() {
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
-    MockServerUtils.setUpDynamicGetCallback(TEST_PATH);
+    String id = addDataToMockServerCache(path, node);
+    MockServerUtils.setUpDynamicGetCallback(path);
 
     Mono<TestResponseModel> request = testTmfClient.get(id);
     StepVerifier.create(request)
@@ -94,8 +90,8 @@ class TestTmfClientIT {
   @Test
   void test_getWithJsonPath_withValidId_shouldReturnOkay() {
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
-    MockServerUtils.setUpDynamicGetCallback(TEST_PATH);
+    String id = addDataToMockServerCache(path, node);
+    MockServerUtils.setUpDynamicGetCallback(path);
 
     Mono<TestResponseModel> request =
         testTmfClient.get(id, RetrievalContext.builder().withServerJsonFilter("$.id").build());
@@ -113,8 +109,8 @@ class TestTmfClientIT {
   @Test
   void test_getWithClassType_withValidId_shouldReturnOkay() {
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
-    MockServerUtils.setUpDynamicGetCallback(TEST_PATH);
+    String id = addDataToMockServerCache(path, node);
+    MockServerUtils.setUpDynamicGetCallback(path);
 
     Mono<String> request = testTmfClient.get(id, String.class);
     StepVerifier.create(request).assertNext(Assertions::assertNotNull).verifyComplete();
@@ -123,8 +119,8 @@ class TestTmfClientIT {
   @Test
   void test_getWithJsonTypeAndClassPath_withValidId_shouldReturnOkay() {
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
-    MockServerUtils.setUpDynamicGetCallback(TEST_PATH);
+    String id = addDataToMockServerCache(path, node);
+    MockServerUtils.setUpDynamicGetCallback(path);
 
     Mono<String> request = testTmfClient.get(id, ID_RETRIEVAL_CONTEXT, String.class);
     StepVerifier.create(request).assertNext(Assertions::assertNotNull).verifyComplete();
@@ -133,8 +129,8 @@ class TestTmfClientIT {
   @Test
   void test_getWithToken_withValidId_shouldReturnOkay() {
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
-    MockServerUtils.setUpDynamicGetCallback(TEST_PATH);
+    String id = addDataToMockServerCache(path, node);
+    MockServerUtils.setUpDynamicGetCallback(path);
 
     Mono<TestResponseModel> request = testTmfClient.getWithToken("token", id, ID_RETRIEVAL_CONTEXT);
     StepVerifier.create(request).assertNext(Assertions::assertNotNull).verifyComplete();
@@ -142,8 +138,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getListWithServerLimit_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.list();
     StepVerifier.create(response).expectNextCount(10).verifyComplete();
@@ -151,8 +147,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getListWithLimit_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.list(TmfOffsetRequest.of(0, 5));
     StepVerifier.create(response).expectNextCount(5).verifyComplete();
@@ -160,8 +156,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getListWithServerLimitAndMultiValueMap_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.list((new LinkedMultiValueMap<>()));
     StepVerifier.create(response).expectNextCount(10).verifyComplete();
@@ -169,8 +165,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getListWithMultiValueMapAndPageRequest_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.list(new LinkedMultiValueMap<>(), TmfOffsetRequest.of(0, 3));
     StepVerifier.create(response).expectNextCount(3).verifyComplete();
@@ -178,8 +174,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getListWithPageableQuery_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.list(new LinkedMultiValueMap<>(), Pageable.ofSize(7));
     StepVerifier.create(response).expectNextCount(7).verifyComplete();
@@ -187,8 +183,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getAllListWithServerLimit_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.listAll();
     StepVerifier.create(response).expectNextCount(40).verifyComplete();
@@ -196,8 +192,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getAllListWithLimit_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.listAll(TmfOffsetRequest.of(0, 5));
     StepVerifier.create(response).expectNextCount(40).verifyComplete();
@@ -205,8 +201,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getAllListWithServerLimitAndMultiValueMap_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.listAll((new LinkedMultiValueMap<>()));
     StepVerifier.create(response).expectNextCount(40).verifyComplete();
@@ -214,8 +210,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getAllListWithMultiValueMapAndPageRequest_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.listAll(new LinkedMultiValueMap<>(), TmfOffsetRequest.of(10, 5));
     StepVerifier.create(response).expectNextCount(30).verifyComplete();
@@ -223,8 +219,8 @@ class TestTmfClientIT {
 
   @Test
   void test_getAllListWithPageableQuery_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     var response = testTmfClient.listAll(new LinkedMultiValueMap<>(), Pageable.ofSize(5));
     StepVerifier.create(response).expectNextCount(40).verifyComplete();
@@ -232,8 +228,8 @@ class TestTmfClientIT {
 
   @Test
   void test_retrieveSinglePage_withServerLimit_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     Mono<TmfPage<Flux<TestResponseModel>>> response = testTmfClient.listPaged();
 
@@ -254,8 +250,8 @@ class TestTmfClientIT {
 
   @Test
   void test_retrieveSinglePage_withTmfOffsetRequest_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     Mono<TmfPage<Flux<TestResponseModel>>> response =
         testTmfClient.listPaged(TmfOffsetRequest.of(7, 7));
@@ -277,8 +273,8 @@ class TestTmfClientIT {
 
   @Test
   void test_retrieveSinglePage_withMultiValueMap_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     Mono<TmfPage<Flux<TestResponseModel>>> response =
         testTmfClient.listPaged(new LinkedMultiValueMap<>());
@@ -300,8 +296,8 @@ class TestTmfClientIT {
 
   @Test
   void test_retrieveSinglePage_withMultiValueMapAndPageAbleRequest_shouldReturnSuccess() {
-    addingMockServerData(TEST_PATH, 40);
-    MockServerUtils.setUpDynamicGetListCallback(TEST_PATH);
+    addingMockServerData(path, 40);
+    MockServerUtils.setUpDynamicGetListCallback(path);
 
     Mono<TmfPage<Flux<TestResponseModel>>> response =
         testTmfClient.listPaged(new LinkedMultiValueMap<>(), PageRequest.of(7, 5));
@@ -324,7 +320,7 @@ class TestTmfClientIT {
   @Test
   void test_post_shouldReturnOkay() {
     ObjectNode node = getTestData();
-    MockServerUtils.setUpDynamicPostCallback(TEST_PATH);
+    MockServerUtils.setUpDynamicPostCallback(path);
 
     Mono<TestResponseModel> request = testTmfClient.post(node);
     StepVerifier.create(request)
@@ -340,7 +336,7 @@ class TestTmfClientIT {
   @Test
   void test_postWithHeaders_shouldReturnOkay() {
     ObjectNode node = getTestData();
-    MockServerUtils.setUpDynamicPostCallback(TEST_PATH, Headers.headers().withEntry("test", "value1", "value2"));
+    MockServerUtils.setUpDynamicPostCallback(path, Headers.headers().withEntry("test", "value1", "value2"));
 
     Mono<TestResponseModel> request =
         testTmfClient.post(
@@ -358,7 +354,7 @@ class TestTmfClientIT {
   @Test
   void test_postWithClassType_shouldReturnOkay() {
     ObjectNode node = getTestData();
-    MockServerUtils.setUpDynamicPostCallback(TEST_PATH);
+    MockServerUtils.setUpDynamicPostCallback(path);
 
     Mono<String> request = testTmfClient.post(node, String.class);
     StepVerifier.create(request)
@@ -372,9 +368,9 @@ class TestTmfClientIT {
 
   @Test
   void test_patchRequest_withValidData_shouldReturnSuccess() throws JsonPointerException {
-    MockServerUtils.setUpDynamicJsonPatchCallback(TEST_PATH);
+    MockServerUtils.setUpDynamicJsonPatchCallback(path);
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
+    String id = addDataToMockServerCache(path, node);
     var patch =
         new JsonPatch(
             List.of(new ReplaceOperation(new JsonPointer("/name"), new TextNode("test_patch"))));
@@ -393,9 +389,9 @@ class TestTmfClientIT {
 
   @Test
   void test_patchRequest_withValidDataAndHeaders_shouldReturnSuccess() throws JsonPointerException {
-    MockServerUtils.setUpDynamicJsonPatchCallback(TEST_PATH, Headers.headers().withEntry("IfMatch", "true"));
+    MockServerUtils.setUpDynamicJsonPatchCallback(path, Headers.headers().withEntry("IfMatch", "true"));
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
+    String id = addDataToMockServerCache(path, node);
     var patch =
         new JsonPatch(
             List.of(new ReplaceOperation(new JsonPointer("/name"), new TextNode("test_patch"))));
@@ -416,9 +412,9 @@ class TestTmfClientIT {
 
   @Test
   void test_patchRequest_withClassType_shouldReturnSuccess() throws JsonPointerException {
-    MockServerUtils.setUpDynamicJsonPatchCallback(TEST_PATH);
+    MockServerUtils.setUpDynamicJsonPatchCallback(path);
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
+    String id = addDataToMockServerCache(path, node);
     var patch =
         new JsonPatch(
             List.of(new ReplaceOperation(new JsonPointer("/name"), new TextNode("test_patch"))));
@@ -437,9 +433,9 @@ class TestTmfClientIT {
 
   @Test
   void test_patchRequest_withMergePatch_shouldReturnSuccess() {
-    MockServerUtils.setUpDynamicMergePatchCallback(TEST_PATH);
+    MockServerUtils.setUpDynamicMergePatchCallback(path);
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
+    String id = addDataToMockServerCache(path, node);
     var object = jsonToObject("{\"name\":\"test_patch\"}", TestResponseModel.class);
 
     Mono<TestResponseModel> response = testTmfClient.patch(id, object);
@@ -455,9 +451,9 @@ class TestTmfClientIT {
 
   @Test
   void test_patchRequest_withMergePatchWithHeaderValues_shouldReturnSuccess() {
-    MockServerUtils.setUpDynamicMergePatchCallback(TEST_PATH, Headers.headers().withEntry("IfMatch", "true"));
+    MockServerUtils.setUpDynamicMergePatchCallback(path, Headers.headers().withEntry("IfMatch", "true"));
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
+    String id = addDataToMockServerCache(path, node);
     var object = jsonToObject("{\"name\":\"test_patch\"}", TestResponseModel.class);
 
     Mono<TestResponseModel> response =
@@ -475,9 +471,9 @@ class TestTmfClientIT {
 
   @Test
   void test_patchRequest_withMergePatchAndClassType_shouldReturnSuccess() {
-    MockServerUtils.setUpDynamicMergePatchCallback(TEST_PATH);
+    MockServerUtils.setUpDynamicMergePatchCallback(path);
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
+    String id = addDataToMockServerCache(path, node);
     var object = jsonToObject("{\"name\":\"test_patch\"}", TestResponseModel.class);
 
     Mono<String> response = testTmfClient.patch(id, object, String.class);
@@ -493,47 +489,12 @@ class TestTmfClientIT {
 
   @Test
   void test_deleteRequest_shouldReturnSuccess() {
-    MockServerUtils.setUpDynamicDeleteCallback(TEST_PATH);
+    MockServerUtils.setUpDynamicDeleteCallback(path);
     ObjectNode node = getTestData();
-    String id = addDataToMockServerCache(TEST_PATH, node);
+    String id = addDataToMockServerCache(path, node);
 
     Mono<Void> response = testTmfClient.delete(id);
 
     StepVerifier.create(response).verifyComplete();
-  }
-
-  private void addingMockServerData(String path, int count) {
-    List<String> example = List.of("test1", "test2", "test3", "test4", "test5");
-    for (int i = 0; i < count; i++) {
-      ObjectNode node = getTestData();
-      node.put("orderNumber", i);
-      node.put("even", i % 2 == 0);
-      ArrayNode arrayNode = JacksonUtil.getDefaultObjectMapper().createArrayNode();
-      ObjectNode nodeCharacteristic = JacksonUtil.getDefaultObjectMapper().createObjectNode();
-      nodeCharacteristic.put("key", "name");
-      nodeCharacteristic.put("value", example.get(i % 5));
-      arrayNode.add(nodeCharacteristic);
-      node.set("characteristics", arrayNode);
-      addDataToMockServerCache(path, node);
-    }
-  }
-
-  private ObjectNode getTestData() {
-    ObjectNode node = JacksonUtil.getDefaultObjectMapper().createObjectNode();
-    node.put("description", "test_getAll");
-    node.put("name", "test");
-    node.put("randomNumber", new Random().nextInt(5));
-    return node;
-  }
-
-  private String addDataToMockServerCache(String path, ObjectNode json) {
-    HttpRequest httpRequest =
-        new HttpRequest().withPath(path).withBody(JacksonUtil.objectToJson(json));
-    DynamicPostCallback dynamicPostCallback = new DynamicPostCallback();
-    HttpResponse response = dynamicPostCallback.handle(httpRequest);
-    assertEquals(200, response.getStatusCode());
-    JsonNode responseJson = JacksonUtil.jsonToTree(response.getBodyAsString());
-    assertNotNull(responseJson.get("id").asText());
-    return responseJson.get("id").asText();
   }
 }
