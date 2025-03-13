@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatusCode;
@@ -31,7 +30,6 @@ import reactor.test.StepVerifier;
 class GenericTestClientIT {
 
   private String path = "/test";
-  @Qualifier("testTmfClientConfig")
   @Autowired private TmfClientConfig testClientConfig;
   @Autowired private GenericClient genericTestClient;
 
