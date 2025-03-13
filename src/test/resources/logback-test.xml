@@ -5,28 +5,12 @@
     </encoder>
   </appender>
 
-  <logger name="org" level="INFO" />
-  <logger name="com" level="INFO" />
-  <logger name="javax" level="INFO" />
-  <logger name="reactor" level="DEBUG" />
-  <logger name="io" level="DEBUG" />
-
-  <logger name="org.springframework" level="INFO" />
-  <logger name="org.springframework.jdbc" level="DEBUG" />
   <logger name="com.pia" level="TRACE" />
-  <logger name="org.camunda" level="INFO" />
-  <logger name="reactor.netty.http.client" level="DEBUG"/>
-  <logger name="org.mockserver" level="DEBUG" />
-  <logger name="org.thymeleaf" level="INFO" />
-  <logger name="com.pia.solutionhubsecurity.jwt" level="INFO" />
-  <logger name="org.hibernate.SQL" level="DEBUG" />
-  <!--
-  <logger name="org.springframework.transaction" level="TRACE" />
-    <Logger name="org.hibernate.engine.transaction" level="TRACE"/>
-    <logger name="org.hibernate.type.descriptor.sql" level="INFO" />
-  -->
+  <logger name="reactor.netty" level="WARN" />
+  <logger name="io.netty" level="WARN" />
+  <logger name="org.mockserver" level="INFO" />
 
-  <root level="TRACE">
+  <root level="INFO">
     <appender-ref ref="STDOUT" />
   </root>
 </configuration>

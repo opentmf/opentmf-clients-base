@@ -48,13 +48,13 @@ public class MockServerUtils {
 
   public static void setUpDynamicPostCallback(String path) {
     clientAndServer
-        .when(request().withMethod(HttpMethod.POST.name()).withPath(path))
+        .when(request().withMethod(HttpMethod.POST.name()).withPath(path), Times.once())
         .respond(new DynamicPostCallback());
   }
 
   public static void setUpDynamicPostCallback(String path, Headers headers) {
     clientAndServer
-        .when(request().withMethod(HttpMethod.POST.name()).withPath(path).withHeaders(headers))
+        .when(request().withMethod(HttpMethod.POST.name()).withPath(path).withHeaders(headers), Times.once())
         .respond(new DynamicPostCallback());
   }
 
@@ -64,8 +64,17 @@ public class MockServerUtils {
             request()
                 .withMethod(HttpMethod.GET.name())
                 .withPath(path + "/{id}")
-                .withPathParameter("id", ".*"))
+                .withPathParameter("id", ".*"), Times.once())
         .respond(new DynamicGetCallback());
+  }
+
+  public static void setUpDynamicListCallback(String path) {
+    clientAndServer
+        .when(
+            request()
+                .withMethod(HttpMethod.GET.name())
+                .withPath(path), Times.once())
+        .respond(new DynamicGetListCallback());
   }
 
   public static void setUpDynamicJsonPatchCallback(String path) {
@@ -133,7 +142,7 @@ public class MockServerUtils {
 
   public static String addDataToMockServerCache(String path, Object json) {
     HttpRequest httpRequest =
-            new HttpRequest().withPath(path).withBody(JacksonUtil.objectToJson(json));
+        new HttpRequest().withPath(path).withBody(JacksonUtil.objectToJson(json));
     DynamicPostCallback dynamicPostCallback = new DynamicPostCallback();
     HttpResponse response = dynamicPostCallback.handle(httpRequest);
     assertEquals(200, response.getStatusCode());
@@ -190,9 +199,11 @@ public class MockServerUtils {
       BodyWithContentType<?> body, HttpStatus httpStatus) {
     setUpExpectation(HttpMethod.GET.name(), path, parameters, body, httpStatus);
   }
+
   public static void expectDeleteMethod(String path, HttpStatus httpStatus) {
     setUpExpectation(HttpMethod.DELETE.name(), path, httpStatus);
   }
+
   public static void get(
       String path, List<Parameter> requestParameters, int count,
       HttpStatus responseStatus, Object responseBody) {
@@ -243,7 +254,6 @@ public class MockServerUtils {
   }
 
 
-
   private static void setUpExpectation(String httpMethod, String path, BodyWithContentType<?> body,
       HttpStatus httpStatus) {
 
@@ -270,7 +280,8 @@ public class MockServerUtils {
                 .withStatusCode(httpStatus.value()));
   }
 
-  private static void setUpExpectation(String httpMethod, String path, String requestBody, BodyWithContentType<?> body, HttpStatus httpStatus) {
+  private static void setUpExpectation(String httpMethod, String path, String requestBody,
+      BodyWithContentType<?> body, HttpStatus httpStatus) {
 
     clientAndServer
         .when(
@@ -316,7 +327,9 @@ public class MockServerUtils {
                 .withStatusCode(httpStatus.value()));
   }
 
-  public static void setupRetryExpectations(int numRetries, HttpMethod httpMethod, String path, HttpStatus beforeRetryHttpStatus, BodyWithContentType<?> body, HttpStatus afterRetryHttpsStatus) {
+  public static void setupRetryExpectations(int numRetries, HttpMethod httpMethod, String path,
+      HttpStatus beforeRetryHttpStatus, BodyWithContentType<?> body,
+      HttpStatus afterRetryHttpsStatus) {
 
     AtomicInteger counter = new AtomicInteger(0);
     // @formatter:off
@@ -339,7 +352,9 @@ public class MockServerUtils {
     // @formatter:on
   }
 
-  public static void setupRetryExpectations(int numRetries, HttpMethod httpMethod, String path, List<Parameter> parameters, BodyWithContentType<?> firstBody, BodyWithContentType<?> secondBody, HttpStatus status) {
+  public static void setupRetryExpectations(int numRetries, HttpMethod httpMethod, String path,
+      List<Parameter> parameters, BodyWithContentType<?> firstBody,
+      BodyWithContentType<?> secondBody, HttpStatus status) {
 
     AtomicInteger counter = new AtomicInteger(0);
     // @formatter:off
@@ -364,7 +379,8 @@ public class MockServerUtils {
     // @formatter:on
   }
 
-  public static void setupRetryExpectations(int numRetries, HttpMethod httpMethod, String path, BodyWithContentType<?> firstBody, BodyWithContentType<?> secondBody, HttpStatus status) {
+  public static void setupRetryExpectations(int numRetries, HttpMethod httpMethod, String path,
+      BodyWithContentType<?> firstBody, BodyWithContentType<?> secondBody, HttpStatus status) {
 
     AtomicInteger counter = new AtomicInteger(0);
     // @formatter:off

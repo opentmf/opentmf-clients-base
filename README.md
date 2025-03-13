@@ -201,11 +201,11 @@ pia:
 ```
 
 ## GenericClientProvider
-GenericClientProvider uses String as the Create, Update and Result class types, which is suitable for any TMF backend.
+GenericClientProvider uses Object as the Create, Update and Result class types, which is suitable to be used with any TMF compliant backend.
 
-> **Note:** The methods that return Flux are not supported in the GenericClientProvider, because the reactive web client cannot distinguish multiple returned objects when specifying String as the result class. Because of that, the Flux returning methods of the TmfClient interface will throw an UnsupportedOperationException.
+If the result class type is not explicitly specified, a LinkedHashMap<String, Object> will be returned containing all values within the returned JSON object.
 
-Here is an example to use the GenericClient with the previously configured `default` web client:
+Here is an example of exposing a GenericClient with the previously configured `default` web client:
 
 ```java
 @Configuration
@@ -234,9 +234,15 @@ public class AnotherServiceImpl implements AnotherService {
   
   @Override
   public void anotherMethod() {
-    // For example
-    Mono<String> jsonResult = genericTestClient.get("1");
-    // ...
+    // For example, returned object will be an instance of LinkedHashMap<String, Object>
+    Mono<Object> jsonResult = genericTestClient.get("1");
+
+    // Or, like this
+    Mono<Sample> jsonResult = genericTestClient.get("1", Sample.class);
+
+    // For list methods, specifying a return class type is currently not possible
+    // You can do collectList on the Flux to get List<LinkedHashMap<String, Object>>
+    // then you can convert each record into any class of choice.
   }
 }
 ```
@@ -275,3 +281,6 @@ Any TMF Client Provider will include this dependency. However, if your use case 
 ### 1.0.4
 - Updates to pia-web-clients 1.0.8, for fewer dependencies for the reactive WebClient.
 - Updates Spring Boot version to 3.4.1
+### 1.0.5
+- Changes the types of the GenericClient from String to Object to cover broader use cases.
+- Updates Spring Boot version to 3.4.3
