@@ -2,9 +2,9 @@ package com.pia.tmf.common.util;
 
 import com.pia.client.common.service.api.TokenService;
 import com.pia.tmf.common.config.TmfClientConfigurations.TmfClientConfig;
-import com.pia.tmf.common.model.RetrievalContext;
 import com.pia.tmf.common.model.TmfClientCommonsConstants;
 import com.pia.tmf.common.model.TmfOffsetRequest;
+import com.pia.tmf.common.model.TmfRequestContext;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.springframework.data.domain.Pageable;
@@ -17,8 +17,8 @@ import org.springframework.util.StringUtils;
 public class TmfClientCommonHeaderUtil {
   private TmfClientCommonHeaderUtil() {}
 
-  public static Consumer<HttpHeaders> prepareHeaderConsumer(String authToken,
-      TokenService tokenService) {
+  public static Consumer<HttpHeaders> prepareHeaderConsumer(
+      String authToken, TokenService tokenService) {
     validateAuthToken(authToken);
     return setAuthorization(authToken, tokenService);
   }
@@ -27,15 +27,13 @@ public class TmfClientCommonHeaderUtil {
       String authToken, TmfClientConfig config, TokenService tokenService) {
     validateAuthToken(authToken);
     return combineConsumers(
-        setAuthorization(authToken, tokenService),
-        addTmfConfigFixedHeaders(config)
-    );
+        setAuthorization(authToken, tokenService), addTmfConfigFixedHeaders(config));
   }
 
-  public static Consumer<HttpHeaders> prepareHeaderConsumer(String authToken, Pageable pageQuery,
-      TokenService tokenService) {
+  public static Consumer<HttpHeaders> prepareHeaderConsumer(
+      String authToken, Pageable pageQuery, TokenService tokenService) {
     if (pageQuery instanceof TmfOffsetRequest tmfOffsetRequest) {
-      return prepareHeaderConsumer(authToken, tmfOffsetRequest.getRetrievalContext(), tokenService);
+      return prepareHeaderConsumer(authToken, tmfOffsetRequest.getRequestContext(), tokenService);
     }
     return prepareHeaderConsumer(authToken, tokenService);
   }
@@ -43,47 +41,48 @@ public class TmfClientCommonHeaderUtil {
   public static Consumer<HttpHeaders> prepareHeaderConsumer(
       String authToken, TmfClientConfig config, Pageable pageQuery, TokenService tokenService) {
     if (pageQuery instanceof TmfOffsetRequest tmfOffsetRequest) {
-      return prepareHeaderConsumer(authToken, config, tmfOffsetRequest.getRetrievalContext(), tokenService);
+      return prepareHeaderConsumer(
+          authToken, config, tmfOffsetRequest.getRequestContext(), tokenService);
     }
     return prepareHeaderConsumer(authToken, config, tokenService);
   }
 
   public static Consumer<HttpHeaders> prepareHeaderConsumer(
-      String authToken, RetrievalContext retrievalContext, TokenService tokenService) {
+      String authToken, TmfRequestContext requestContext, TokenService tokenService) {
     validateAuthToken(authToken);
     return combineConsumers(
-        setAuthorization(authToken, tokenService),
-        addRetrievalContextHeaders(retrievalContext));
+        setAuthorization(authToken, tokenService), addRetrievalContextHeaders(requestContext));
   }
 
   public static Consumer<HttpHeaders> prepareHeaderConsumer(
       String authToken,
       TmfClientConfig config,
-      RetrievalContext retrievalContext, TokenService tokenService) {
+      TmfRequestContext requestContext,
+      TokenService tokenService) {
     validateAuthToken(authToken);
     return combineConsumers(
         setAuthorization(authToken, tokenService),
-        addRetrievalContextHeaders(retrievalContext),
+        addRetrievalContextHeaders(requestContext),
         addTmfConfigFixedHeaders(config));
   }
 
-  private static Consumer<HttpHeaders> setAuthorization(String authToken, TokenService tokenService) {
-    return httpHeaders -> httpHeaders.set(HttpHeaders.AUTHORIZATION,
-        tokenService.getTokenType() + " " + authToken);
+  private static Consumer<HttpHeaders> setAuthorization(
+      String authToken, TokenService tokenService) {
+    return httpHeaders ->
+        httpHeaders.set(HttpHeaders.AUTHORIZATION, tokenService.getTokenType() + " " + authToken);
   }
 
   private static Consumer<HttpHeaders> addRetrievalContextHeaders(
-      RetrievalContext retrievalContext) {
-    return httpHeaders -> {
-      if (retrievalContext != null) {
-        addHeaders(httpHeaders, retrievalContext.getHeaderParameters());
+      TmfRequestContext requestContext) {
+    return (HttpHeaders httpHeaders) -> {
+      if (requestContext != null) {
+        addHeaders(httpHeaders, requestContext.getHeaderParameters());
       }
     };
   }
 
-  private static Consumer<HttpHeaders> addTmfConfigFixedHeaders(
-      TmfClientConfig tmfClientConfig) {
-    return httpHeaders -> {
+  private static Consumer<HttpHeaders> addTmfConfigFixedHeaders(TmfClientConfig tmfClientConfig) {
+    return (HttpHeaders httpHeaders) -> {
       if (tmfClientConfig != null) {
         addHeaders(httpHeaders, tmfClientConfig.getFixedHeaders());
       }
@@ -121,7 +120,7 @@ public class TmfClientCommonHeaderUtil {
 
   @SafeVarargs
   private static Consumer<HttpHeaders> combineConsumers(Consumer<HttpHeaders>... consumers) {
-    return httpHeaders -> {
+    return (HttpHeaders httpHeaders) -> {
       for (Consumer<HttpHeaders> consumer : consumers) {
         consumer.accept(httpHeaders);
       }

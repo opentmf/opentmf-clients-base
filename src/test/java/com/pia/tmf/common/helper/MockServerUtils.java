@@ -52,9 +52,22 @@ public class MockServerUtils {
         .respond(new DynamicPostCallback());
   }
 
+  public static void setUpDynamicPostCallback(String path, Parameter parameter) {
+    clientAndServer
+        .when(
+            request()
+                .withMethod(HttpMethod.POST.name())
+                .withQueryStringParameter(parameter)
+                .withPath(path),
+            Times.once())
+        .respond(new DynamicPostCallback());
+  }
+
   public static void setUpDynamicPostCallback(String path, Headers headers) {
     clientAndServer
-        .when(request().withMethod(HttpMethod.POST.name()).withPath(path).withHeaders(headers), Times.once())
+        .when(
+            request().withMethod(HttpMethod.POST.name()).withPath(path).withHeaders(headers),
+            Times.once())
         .respond(new DynamicPostCallback());
   }
 
@@ -64,16 +77,26 @@ public class MockServerUtils {
             request()
                 .withMethod(HttpMethod.GET.name())
                 .withPath(path + "/{id}")
-                .withPathParameter("id", ".*"), Times.once())
+                .withPathParameter("id", ".*"),
+            Times.once())
+        .respond(new DynamicGetCallback());
+  }
+
+  public static void setUpDynamicGetCallback(String path, Parameter parameter) {
+    clientAndServer
+        .when(
+            request()
+                .withMethod(HttpMethod.GET.name())
+                .withPath(path + "/{id}")
+                .withQueryStringParameter(parameter)
+                .withPathParameter("id", ".*"),
+            Times.once())
         .respond(new DynamicGetCallback());
   }
 
   public static void setUpDynamicListCallback(String path) {
     clientAndServer
-        .when(
-            request()
-                .withMethod(HttpMethod.GET.name())
-                .withPath(path), Times.once())
+        .when(request().withMethod(HttpMethod.GET.name()).withPath(path), Times.once())
         .respond(new DynamicGetListCallback());
   }
 
@@ -129,6 +152,16 @@ public class MockServerUtils {
         .respond(new DynamicGetListCallback());
   }
 
+  public static void setUpDynamicGetListCallback(String path, Parameter parameter) {
+    clientAndServer
+        .when(
+            request()
+                .withMethod(HttpMethod.GET.name())
+                .withPath(path)
+                .withQueryStringParameter(parameter))
+        .respond(new DynamicGetListCallback());
+  }
+
   public static void setUpDynamicDeleteCallback(String path) {
     clientAndServer
         .when(
@@ -138,7 +171,6 @@ public class MockServerUtils {
                 .withPathParameter("id", ".*"))
         .respond(new DynamicDeleteCallback());
   }
-
 
   public static String addDataToMockServerCache(String path, Object json) {
     HttpRequest httpRequest =
@@ -170,33 +202,33 @@ public class MockServerUtils {
     expectPostMethod(path, new StringBody(returnPayload, APPLICATION_JSON), httpStatus);
   }
 
-  public static void expectPostMethod(String path, BodyWithContentType<?> body,
-      HttpStatus httpStatus) {
+  public static void expectPostMethod(
+      String path, BodyWithContentType<?> body, HttpStatus httpStatus) {
     setUpExpectation(HttpMethod.POST.name(), path, body, httpStatus);
   }
 
-  public static void expectPostMethod(String path, String requestBody, BodyWithContentType<?> body,
-      HttpStatus httpStatus) {
+  public static void expectPostMethod(
+      String path, String requestBody, BodyWithContentType<?> body, HttpStatus httpStatus) {
     setUpExpectation(HttpMethod.POST.name(), path, requestBody, body, httpStatus);
   }
 
-  public static void expectPatchMethod(String path, BodyWithContentType<?> body,
-      HttpStatus httpStatus) {
+  public static void expectPatchMethod(
+      String path, BodyWithContentType<?> body, HttpStatus httpStatus) {
     setUpExpectation(HttpMethod.PATCH.name(), path, body, httpStatus);
   }
 
-  public static void expectPatchMethod(String path, String requestBody, BodyWithContentType<?> body,
-      HttpStatus httpStatus) {
+  public static void expectPatchMethod(
+      String path, String requestBody, BodyWithContentType<?> body, HttpStatus httpStatus) {
     setUpExpectation(HttpMethod.PATCH.name(), path, requestBody, body, httpStatus);
   }
 
-  public static void expectGetMethod(String path, BodyWithContentType<?> body,
-      HttpStatus httpStatus) {
+  public static void expectGetMethod(
+      String path, BodyWithContentType<?> body, HttpStatus httpStatus) {
     setUpExpectation(HttpMethod.GET.name(), path, body, httpStatus);
   }
 
-  public static void expectGetMethod(String path, List<Parameter> parameters,
-      BodyWithContentType<?> body, HttpStatus httpStatus) {
+  public static void expectGetMethod(
+      String path, List<Parameter> parameters, BodyWithContentType<?> body, HttpStatus httpStatus) {
     setUpExpectation(HttpMethod.GET.name(), path, parameters, body, httpStatus);
   }
 
@@ -205,15 +237,15 @@ public class MockServerUtils {
   }
 
   public static void get(
-      String path, List<Parameter> requestParameters, int count,
-      HttpStatus responseStatus, Object responseBody) {
+      String path,
+      List<Parameter> requestParameters,
+      int count,
+      HttpStatus responseStatus,
+      Object responseBody) {
 
     clientAndServer
         .when(
-            request()
-                .withMethod("GET")
-                .withPath(path)
-                .withQueryStringParameters(requestParameters),
+            request().withMethod("GET").withPath(path).withQueryStringParameters(requestParameters),
             Times.exactly(count))
         .respond(
             response()
@@ -222,30 +254,19 @@ public class MockServerUtils {
   }
 
   public static void get(
-      String path, List<Parameter> requestParameters, int count,
-      HttpStatus responseStatus) {
+      String path, List<Parameter> requestParameters, int count, HttpStatus responseStatus) {
 
     clientAndServer
         .when(
-            request()
-                .withMethod("GET")
-                .withPath(path)
-                .withQueryStringParameters(requestParameters),
+            request().withMethod("GET").withPath(path).withQueryStringParameters(requestParameters),
             Times.exactly(count))
-        .respond(
-            response()
-                .withStatusCode(responseStatus.value()));
+        .respond(response().withStatusCode(responseStatus.value()));
   }
 
-  public static void get(String path, int count,
-      HttpStatus responseStatus, Object responseBody) {
+  public static void get(String path, int count, HttpStatus responseStatus, Object responseBody) {
 
     clientAndServer
-        .when(
-            request()
-                .withMethod("GET")
-                .withPath(path),
-            Times.exactly(count))
+        .when(request().withMethod("GET").withPath(path), Times.exactly(count))
         .respond(
             response()
                 .withContentType(APPLICATION_JSON)
@@ -253,59 +274,46 @@ public class MockServerUtils {
                 .withStatusCode(responseStatus.value()));
   }
 
-
-  private static void setUpExpectation(String httpMethod, String path, BodyWithContentType<?> body,
-      HttpStatus httpStatus) {
+  private static void setUpExpectation(
+      String httpMethod, String path, BodyWithContentType<?> body, HttpStatus httpStatus) {
 
     clientAndServer
-        .when(
-            request()
-                .withMethod(httpMethod)
-                .withPath(path))
-        .respond(
-            response()
-                .withBody(body)
-                .withStatusCode(httpStatus.value()));
+        .when(request().withMethod(httpMethod).withPath(path))
+        .respond(response().withBody(body).withStatusCode(httpStatus.value()));
   }
 
   public static void setUpExpectation(String httpMethod, String path, HttpStatus httpStatus) {
 
     clientAndServer
-        .when(
-            request()
-                .withMethod(httpMethod)
-                .withPath(path))
-        .respond(
-            response()
-                .withStatusCode(httpStatus.value()));
+        .when(request().withMethod(httpMethod).withPath(path))
+        .respond(response().withStatusCode(httpStatus.value()));
   }
 
-  private static void setUpExpectation(String httpMethod, String path, String requestBody,
-      BodyWithContentType<?> body, HttpStatus httpStatus) {
-
-    clientAndServer
-        .when(
-            request()
-                .withMethod(httpMethod)
-                .withPath(path)
-                .withBody(json(requestBody, MatchType.ONLY_MATCHING_FIELDS)))
-        .respond(
-            response()
-                .withBody(body)
-                .withStatusCode(httpStatus.value()));
-  }
-
-  private static void setUpExpectation(String httpMethod, String path, String requestBody,
+  private static void setUpExpectation(
+      String httpMethod,
+      String path,
+      String requestBody,
+      BodyWithContentType<?> body,
       HttpStatus httpStatus) {
+
     clientAndServer
         .when(
             request()
                 .withMethod(httpMethod)
                 .withPath(path)
                 .withBody(json(requestBody, MatchType.ONLY_MATCHING_FIELDS)))
-        .respond(
-            response()
-                .withStatusCode(httpStatus.value()));
+        .respond(response().withBody(body).withStatusCode(httpStatus.value()));
+  }
+
+  private static void setUpExpectation(
+      String httpMethod, String path, String requestBody, HttpStatus httpStatus) {
+    clientAndServer
+        .when(
+            request()
+                .withMethod(httpMethod)
+                .withPath(path)
+                .withBody(json(requestBody, MatchType.ONLY_MATCHING_FIELDS)))
+        .respond(response().withStatusCode(httpStatus.value()));
   }
 
   private static void setUpExpectation(
@@ -316,91 +324,87 @@ public class MockServerUtils {
       HttpStatus httpStatus) {
 
     clientAndServer
-        .when(
-            request()
-                .withMethod(httpMethod)
-                .withPath(path)
-                .withQueryStringParameters(parameters))
-        .respond(
-            response()
-                .withBody(body)
-                .withStatusCode(httpStatus.value()));
+        .when(request().withMethod(httpMethod).withPath(path).withQueryStringParameters(parameters))
+        .respond(response().withBody(body).withStatusCode(httpStatus.value()));
   }
 
-  public static void setupRetryExpectations(int numRetries, HttpMethod httpMethod, String path,
-      HttpStatus beforeRetryHttpStatus, BodyWithContentType<?> body,
+  public static void setupRetryExpectations(
+      int numRetries,
+      HttpMethod httpMethod,
+      String path,
+      HttpStatus beforeRetryHttpStatus,
+      BodyWithContentType<?> body,
       HttpStatus afterRetryHttpsStatus) {
 
     AtomicInteger counter = new AtomicInteger(0);
     // @formatter:off
     clientAndServer
-        .when(request()
-            .withMethod(httpMethod.name())
-            .withPath(path))
-        .respond((HttpRequest httpRequest) -> {
-          int retryAttempt = counter.incrementAndGet();
-          // The first request should return the simulated error 500_xxx status
-          if (numRetries > 1 && retryAttempt >= numRetries) {
-            return response()
-                .withBody(body)
-                .withStatusCode(afterRetryHttpsStatus.value());
-          } else {
-            return response()
-                .withStatusCode(beforeRetryHttpStatus.value());
-          }
-        });
+        .when(request().withMethod(httpMethod.name()).withPath(path))
+        .respond(
+            (HttpRequest httpRequest) -> {
+              int retryAttempt = counter.incrementAndGet();
+              // The first request should return the simulated error 500_xxx status
+              if (numRetries > 1 && retryAttempt >= numRetries) {
+                return response().withBody(body).withStatusCode(afterRetryHttpsStatus.value());
+              } else {
+                return response().withStatusCode(beforeRetryHttpStatus.value());
+              }
+            });
     // @formatter:on
   }
 
-  public static void setupRetryExpectations(int numRetries, HttpMethod httpMethod, String path,
-      List<Parameter> parameters, BodyWithContentType<?> firstBody,
-      BodyWithContentType<?> secondBody, HttpStatus status) {
+  public static void setupRetryExpectations(
+      int numRetries,
+      HttpMethod httpMethod,
+      String path,
+      List<Parameter> parameters,
+      BodyWithContentType<?> firstBody,
+      BodyWithContentType<?> secondBody,
+      HttpStatus status) {
 
     AtomicInteger counter = new AtomicInteger(0);
     // @formatter:off
     clientAndServer
-        .when(request()
-            .withMethod(httpMethod.name())
-            .withPath(path)
-            .withQueryStringParameters(parameters))
-        .respond((HttpRequest httpRequest) -> {
-          int retryAttempt = counter.incrementAndGet();
-          // The first request should return the simulated error 500_xxx status
-          if (numRetries > 1 && retryAttempt >= numRetries) {
-            return response()
-                .withBody(secondBody)
-                .withStatusCode(status.value());
-          } else {
-            return response()
-                .withBody(firstBody)
-                .withStatusCode(status.value());
-          }
-        });
+        .when(
+            request()
+                .withMethod(httpMethod.name())
+                .withPath(path)
+                .withQueryStringParameters(parameters))
+        .respond(
+            (HttpRequest httpRequest) -> {
+              int retryAttempt = counter.incrementAndGet();
+              // The first request should return the simulated error 500_xxx status
+              if (numRetries > 1 && retryAttempt >= numRetries) {
+                return response().withBody(secondBody).withStatusCode(status.value());
+              } else {
+                return response().withBody(firstBody).withStatusCode(status.value());
+              }
+            });
     // @formatter:on
   }
 
-  public static void setupRetryExpectations(int numRetries, HttpMethod httpMethod, String path,
-      BodyWithContentType<?> firstBody, BodyWithContentType<?> secondBody, HttpStatus status) {
+  public static void setupRetryExpectations(
+      int numRetries,
+      HttpMethod httpMethod,
+      String path,
+      BodyWithContentType<?> firstBody,
+      BodyWithContentType<?> secondBody,
+      HttpStatus status) {
 
     AtomicInteger counter = new AtomicInteger(0);
     // @formatter:off
     clientAndServer
-        .when(request()
-            .withMethod(httpMethod.name())
-            .withPath(path))
-        .respond((HttpRequest httpRequest) -> {
-          int retryAttempt = counter.incrementAndGet();
-          // The first request should return the simulated error 500_xxx status
-          if (numRetries > 1 && retryAttempt >= numRetries) {
-            return response()
-                .withBody(secondBody)
-                .withStatusCode(status.value());
-          } else {
-            return response()
-                .withBody(firstBody)
-                .withStatusCode(status.value());
-          }
-        });
+        .when(request().withMethod(httpMethod.name()).withPath(path))
+        .respond(
+            (HttpRequest httpRequest) -> {
+              int retryAttempt = counter.incrementAndGet();
+              // The first request should return the simulated error 500_xxx status
+              if (numRetries > 1 && retryAttempt >= numRetries) {
+                return response().withBody(secondBody).withStatusCode(status.value());
+              } else {
+                return response().withBody(firstBody).withStatusCode(status.value());
+              }
+            });
     // @formatter:on
   }
 }

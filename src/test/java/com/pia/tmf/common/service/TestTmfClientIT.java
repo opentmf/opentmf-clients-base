@@ -21,15 +21,16 @@ import com.pia.tmf.common.config.TestTmfClient;
 import com.pia.tmf.common.config.TmfClientConfigurations;
 import com.pia.tmf.common.helper.MockServerUtils;
 import com.pia.tmf.common.helper.TestResponseModel;
-import com.pia.tmf.common.model.RetrievalContext;
 import com.pia.tmf.common.model.TmfOffsetRequest;
 import com.pia.tmf.common.model.TmfPage;
+import com.pia.tmf.common.model.TmfRequestContext;
 import java.util.List;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockserver.model.Headers;
+import org.mockserver.model.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -47,8 +48,8 @@ class TestTmfClientIT {
   private String path;
   private static final String SH_TMF_CLIENTS = "sh-tmf-x-client";
   private static final String ID_JSON_FILTER = "$.id";
-  private static final RetrievalContext ID_RETRIEVAL_CONTEXT =
-      RetrievalContext.builder().withServerJsonFilter(ID_JSON_FILTER).build();
+  private static final TmfRequestContext ID_RETRIEVAL_CONTEXT =
+      TmfRequestContext.builder().withServerJsonFilter(ID_JSON_FILTER).build();
 
   @Autowired private TmfClientConfigurations tmfClientConfigurations;
   @Autowired private TestClientProvider testClientProvider;
@@ -94,7 +95,7 @@ class TestTmfClientIT {
     MockServerUtils.setUpDynamicGetCallback(path);
 
     Mono<TestResponseModel> request =
-        testTmfClient.get(id, RetrievalContext.builder().withServerJsonFilter("$.id").build());
+        testTmfClient.get(id, TmfRequestContext.builder().withServerJsonFilter("$.id").build());
     StepVerifier.create(request)
         .assertNext(
             res -> {
@@ -102,6 +103,24 @@ class TestTmfClientIT {
               assertEquals(id, res.getId());
               assertNotNull(res.getName());
               assertNotNull(res.getDescription());
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  void test_getWithQueryParameter_withValidId_shouldReturnOkay() {
+    ObjectNode node = getTestData();
+    String id = addDataToMockServerCache(path, node);
+    MockServerUtils.setUpDynamicGetCallback(path, Parameter.param("test", "testData"));
+
+    Mono<TestResponseModel> request =
+        testTmfClient.get(
+            id, TmfRequestContext.builder().withQueryParameters("test", "testData").build());
+    StepVerifier.create(request)
+        .assertNext(
+            res -> {
+              assertNotNull(res);
+              assertEquals(id, res.getId());
             })
         .verifyComplete();
   }
@@ -226,6 +245,28 @@ class TestTmfClientIT {
     StepVerifier.create(response).expectNextCount(40).verifyComplete();
   }
 
+    @Test
+    void test_getAllListWithPageableQueryAndMultiValueMap_shouldReturnSuccess() {
+        addingMockServerData(path, 40);
+        MockServerUtils.setUpDynamicGetListCallback(path, Parameter.param("test", "testData"));
+        var multiValueMap = new LinkedMultiValueMap<String, String>();
+        multiValueMap.add("test", "testData");
+
+        var response = testTmfClient.listAll(multiValueMap, Pageable.ofSize(5));
+        StepVerifier.create(response).expectNextCount(40).verifyComplete();
+    }
+
+    @Test
+    void test_getAllListWithPageableWithQueryAndMultiValueMap_shouldReturnSuccess() {
+        addingMockServerData(path, 40);
+        MockServerUtils.setUpDynamicGetListCallback(path, Parameter.param("test", "testData"));
+        var multiValueMap = new LinkedMultiValueMap<String, String>();
+        multiValueMap.add("test", "testData");
+
+        var response = testTmfClient.listAll(TmfOffsetRequest.of().withQueryParameters(multiValueMap));
+        StepVerifier.create(response).expectNextCount(40).verifyComplete();
+    }
+
   @Test
   void test_retrieveSinglePage_withServerLimit_shouldReturnSuccess() {
     addingMockServerData(path, 40);
@@ -336,11 +377,30 @@ class TestTmfClientIT {
   @Test
   void test_postWithHeaders_shouldReturnOkay() {
     ObjectNode node = getTestData();
-    MockServerUtils.setUpDynamicPostCallback(path, Headers.headers().withEntry("test", "value1", "value2"));
+    MockServerUtils.setUpDynamicPostCallback(
+        path, Headers.headers().withEntry("test", "value1", "value2"));
 
     Mono<TestResponseModel> request =
         testTmfClient.post(
-            node, RetrievalContext.builder().withHeaderValues("test", "value1", "value2").build());
+            node, TmfRequestContext.builder().withHeaderValues("test", "value1", "value2").build());
+    StepVerifier.create(request)
+        .assertNext(
+            res -> {
+              assertNotNull(res);
+              assertNotNull(res.getName());
+              assertNotNull(res.getDescription());
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  void test_postWithQueryParameter_shouldReturnOkay() {
+    ObjectNode node = getTestData();
+    MockServerUtils.setUpDynamicPostCallback(path, Parameter.param("test", "testData"));
+
+    Mono<TestResponseModel> request =
+        testTmfClient.post(
+            node, TmfRequestContext.builder().withQueryParameters("test", "testData").build());
     StepVerifier.create(request)
         .assertNext(
             res -> {
@@ -389,7 +449,8 @@ class TestTmfClientIT {
 
   @Test
   void test_patchRequest_withValidDataAndHeaders_shouldReturnSuccess() throws JsonPointerException {
-    MockServerUtils.setUpDynamicJsonPatchCallback(path, Headers.headers().withEntry("IfMatch", "true"));
+    MockServerUtils.setUpDynamicJsonPatchCallback(
+        path, Headers.headers().withEntry("IfMatch", "true"));
     ObjectNode node = getTestData();
     String id = addDataToMockServerCache(path, node);
     var patch =
@@ -398,7 +459,7 @@ class TestTmfClientIT {
 
     Mono<TestResponseModel> response =
         testTmfClient.patch(
-            id, patch, RetrievalContext.builder().withHeaderValues("ifMatch", "true").build());
+            id, patch, TmfRequestContext.builder().withHeaderValues("ifMatch", "true").build());
 
     StepVerifier.create(response)
         .assertNext(
@@ -451,14 +512,15 @@ class TestTmfClientIT {
 
   @Test
   void test_patchRequest_withMergePatchWithHeaderValues_shouldReturnSuccess() {
-    MockServerUtils.setUpDynamicMergePatchCallback(path, Headers.headers().withEntry("IfMatch", "true"));
+    MockServerUtils.setUpDynamicMergePatchCallback(
+        path, Headers.headers().withEntry("IfMatch", "true"));
     ObjectNode node = getTestData();
     String id = addDataToMockServerCache(path, node);
     var object = jsonToObject("{\"name\":\"test_patch\"}", TestResponseModel.class);
 
     Mono<TestResponseModel> response =
         testTmfClient.patch(
-            id, object, RetrievalContext.builder().withHeaderValues("IfMatch", "true").build());
+            id, object, TmfRequestContext.builder().withHeaderValues("IfMatch", "true").build());
 
     StepVerifier.create(response)
         .assertNext(

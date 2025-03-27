@@ -16,10 +16,12 @@ import org.springframework.util.MultiValueMap;
 @Getter
 public class TmfOffsetRequest extends AbstractOffsetRequest {
   /** The filtering configuration for the request. */
-  private RetrievalContext retrievalContext;
+  private TmfRequestContext requestContext;
 
   /**
-   * Constructs a new TmfOffsetRequest object with the provided offset, limit, and sorting configuration.
+   * Constructs a new TmfOffsetRequest object with the provided offset, limit, and sorting
+   * configuration.
+   *
    * @param offset The offset index.
    * @param limit The maximum number of items per page.
    * @param sort The sorting configuration.
@@ -35,15 +37,16 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
    * @param offset The offset index.
    * @param limit The maximum number of items per page.
    * @param sort The sorting configuration.
-   * @param retrievalContext The filtering configuration.
+   * @param requestContext The filtering configuration.
    */
-  private TmfOffsetRequest(long offset, int limit, Sort sort, RetrievalContext retrievalContext) {
+  private TmfOffsetRequest(long offset, int limit, Sort sort, TmfRequestContext requestContext) {
     super(sort, offset, limit);
-    this.retrievalContext = retrievalContext == null ? new RetrievalContext() : retrievalContext;
+    this.requestContext = requestContext == null ? new TmfRequestContext() : requestContext;
   }
 
   /**
    * Generates a new TmfOffsetRequest object representing the next page.
+   *
    * @return A new TmfOffsetRequest object representing the next page.
    */
   @Override
@@ -52,12 +55,15 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
         this.getOffset() + this.getPageSize(),
         this.getPageSize(),
         this.getSort(),
-        this.retrievalContext);
+        this.requestContext);
   }
 
   /**
-   * Generates a new TmfOffsetRequest object representing the previous page if it exists; otherwise, returns itself.
-   * @return A new TmfOffsetRequest object representing the previous page if it exists; otherwise, itself.
+   * Generates a new TmfOffsetRequest object representing the previous page if it exists; otherwise,
+   * returns itself.
+   *
+   * @return A new TmfOffsetRequest object representing the previous page if it exists; otherwise,
+   *     itself.
    */
   @Override
   public Pageable previous() {
@@ -67,76 +73,94 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
             this.getOffset() - this.getPageSize(),
             this.getPageSize(),
             this.getSort(),
-            this.retrievalContext);
+            this.requestContext);
   }
 
   /**
    * Generates a new TmfOffsetRequest object representing the first page.
+   *
    * @return A new TmfOffsetRequest object representing the first page.
    */
   @Override
   public Pageable first() {
-    return new TmfOffsetRequest(0L, this.getPageSize(), this.getSort(), this.retrievalContext);
+    return new TmfOffsetRequest(0L, this.getPageSize(), this.getSort(), this.requestContext);
   }
 
   /**
    * Generates a new TmfOffsetRequest object with the specified page number.
+   *
    * @param pageNumber The page number.
    * @return A new TmfOffsetRequest object with the specified page number.
    */
   @Override
   public Pageable withPage(int pageNumber) {
     return new TmfOffsetRequest(
-        ((long) getPageSize() * pageNumber), getPageSize(), getSort(), this.retrievalContext);
+        ((long) getPageSize() * pageNumber), getPageSize(), getSort(), this.requestContext);
   }
-
 
   /**
    * Retrieves the fields included or excluded in the filtering configuration.
+   *
    * @return The fields included or excluded in the filtering configuration.
    */
   public Set<String> getFields() {
-    return this.retrievalContext.getFields();
+    return this.requestContext.getFields();
   }
 
   /**
    * Retrieves the JSON filter included in the filtering configuration.
+   *
    * @return The JSON filter included in the filtering configuration.
    */
   public JsonFilter getJsonFilter() {
-    return this.retrievalContext.getJsonFilter();
+    return this.requestContext.getJsonFilter();
   }
 
   public MultiValueMap<String, String> getHeaders() {
-    return this.retrievalContext.getHeaderParameters();
+    return this.requestContext.getHeaderParameters();
+  }
+
+  public MultiValueMap<String, String> getQueryParameters() {
+    return this.requestContext.getQueryParameters();
   }
 
   /**
    * Retrieves the query string of the JSON filter included in the filtering configuration.
+   *
    * @return The query string of the JSON filter included in the filtering configuration.
    */
   public String getJsonFilterQuery() {
-    return this.retrievalContext.getJsonFilterQuery();
+    return this.requestContext.getJsonFilterQuery();
   }
 
   /**
    * Retrieves the type of the JSON filter included in the filtering configuration.
+   *
    * @return The type of the JSON filter included in the filtering configuration.
    */
   public JsonFilter.TYPE getJsonFilterTYpe() {
-    return this.retrievalContext.getJsonFilterType();
+    return this.requestContext.getJsonFilterType();
   }
 
   /**
    * Creates a new TmfOffsetRequest object with default settings.
+   *
    * @return A new TmfOffsetRequest object with default settings.
    */
   public static TmfOffsetRequest of() {
     return of(0, Integer.MAX_VALUE, Sort.unsorted());
   }
 
+  public static TmfOffsetRequest of(Pageable pageable) {
+    if (pageable instanceof TmfOffsetRequest tmfOffsetRequest) {
+      return tmfOffsetRequest;
+    }
+    return of((int) pageable.getOffset(), pageable.getPageSize(), pageable.getSort());
+  }
+
   /**
    * Creates a new TmfOffsetRequest object with the specified offset and default settings.
+   *
    * @param offset The offset index.
    * @return A new TmfOffsetRequest object with the specified offset and default settings.
    */
@@ -146,6 +170,7 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
 
   /**
    * Creates a new TmfOffsetRequest object with the specified offset, limit, and default settings.
+   *
    * @param offset The offset index.
    * @param limit The maximum number of items per page.
    * @return A new TmfOffsetRequest object with the specified offset, limit, and default settings.
@@ -156,6 +181,7 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
 
   /**
    * Creates a new TmfOffsetRequest object with the specified sorting direction and properties.
+   *
    * @param direction The sorting direction.
    * @param properties The properties to sort by.
    * @return A new TmfOffsetRequest object with the specified sorting direction and properties.
@@ -165,23 +191,30 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
   }
 
   /**
-   * Creates a new TmfOffsetRequest object with the specified offset, limit, sorting direction, and properties.
+   * Creates a new TmfOffsetRequest object with the specified offset, limit, sorting direction, and
+   * properties.
+   *
    * @param offset The offset index.
    * @param limit The maximum number of items per page.
    * @param direction The sorting direction.
    * @param properties The properties to sort by.
-   * @return A new TmfOffsetRequest object with the specified offset, limit, sorting direction, and properties.
+   * @return A new TmfOffsetRequest object with the specified offset, limit, sorting direction, and
+   *     properties.
    */
-  public static TmfOffsetRequest of(int offset, int limit, Sort.Direction direction, String... properties) {
+  public static TmfOffsetRequest of(
+      int offset, int limit, Sort.Direction direction, String... properties) {
     return of(offset, limit, Sort.by(direction, properties));
   }
 
   /**
-   * Creates a new TmfOffsetRequest object with the specified offset, limit, and sorting configuration.
+   * Creates a new TmfOffsetRequest object with the specified offset, limit, and sorting
+   * configuration.
+   *
    * @param offset The offset index.
    * @param limit The maximum number of items per page.
    * @param sort The sorting configuration.
-   * @return A new TmfOffsetRequest object with the specified offset, limit, and sorting configuration.
+   * @return A new TmfOffsetRequest object with the specified offset, limit, and sorting
+   *     configuration.
    */
   public static TmfOffsetRequest of(int offset, int limit, Sort sort) {
     return new TmfOffsetRequest(offset, limit, sort);
@@ -189,55 +222,71 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
 
   /**
    * Updates the fields included or excluded in the filtering configuration.
+   *
    * @param fields The fields to include or exclude.
    * @return This TmfOffsetRequest object with updated filtering configuration.
    */
   public TmfOffsetRequest withFields(String... fields) {
-    this.retrievalContext.setFields(Set.of(fields));
+    this.requestContext.setFields(Set.of(fields));
     return this;
   }
 
   /**
    * Sets the previously configured RetrievalContext.
-   * @param retrievalContext the retrieval context.
+   *
+   * @param requestContext the retrieval context.
    * @return This TmfOffsetRequest object with updated RetrievalContext.
    */
-  public TmfOffsetRequest withRetrievalContext(RetrievalContext retrievalContext) {
-    this.retrievalContext = retrievalContext;
+  public TmfOffsetRequest withRequestContext(TmfRequestContext requestContext) {
+    this.requestContext = requestContext;
     return this;
   }
 
   /**
    * Sets a client-side JSON filter with the provided query string.
+   *
    * @param query The query string for the client-side JSON filter.
    * @return This TmfOffsetRequest object with the updated client-side JSON filter.
    */
   public TmfOffsetRequest withClientFilter(String query) {
-    this.retrievalContext.setJsonFilter(JsonFilter.of(query, JsonFilter.TYPE.CLIENT));
+    this.requestContext.setJsonFilter(JsonFilter.of(query, JsonFilter.TYPE.CLIENT));
     return this;
   }
 
   /**
    * Sets a server-side JSON filter with the provided query string.
+   *
    * @param query The query string for the server-side JSON filter.
    * @return This TmfOffsetRequest object with the updated server-side JSON filter.
    */
   public TmfOffsetRequest withServerFilter(String query) {
-    this.retrievalContext.setJsonFilter(JsonFilter.of(query, JsonFilter.TYPE.SERVER));
+    this.requestContext.setJsonFilter(JsonFilter.of(query, JsonFilter.TYPE.SERVER));
     return this;
   }
 
   /**
    * Sets the limit for the number of items per page.
+   *
    * @param limit The limit for the number of items per page.
    * @return A new TmfOffsetRequest object with the specified limit.
    */
   public TmfOffsetRequest withLimit(Integer limit) {
-    return new TmfOffsetRequest(this.getOffset(), limit, this.getSort(), this.retrievalContext);
+    return new TmfOffsetRequest(this.getOffset(), limit, this.getSort(), this.requestContext);
   }
 
   public TmfOffsetRequest withHeaderParameters(MultiValueMap<String, String> headerParameters) {
-    this.retrievalContext.setHeaderParameters(headerParameters);
+    if (requestContext == null) {
+      requestContext = TmfRequestContext.builder().withHeaderValues(headerParameters).build();
+    }
+    this.requestContext.setHeaderParameters(headerParameters);
+    return this;
+  }
+
+  public TmfOffsetRequest withQueryParameters(MultiValueMap<String, String> headerParameters) {
+    if (requestContext == null) {
+      requestContext = TmfRequestContext.builder().withQueryParameters(headerParameters).build();
+    }
+    this.requestContext.setQueryParameters(headerParameters);
     return this;
   }
 }
