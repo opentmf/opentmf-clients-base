@@ -71,15 +71,17 @@ public interface TmfClient<C, U, R> {
   Mono<R> patch(String id, U obj, TmfRequestContext requestContext);
   <T> Mono<T> patch(String id, U obj, Class<T> type);
   <T> Mono<T> patch(String id, U obj, TmfRequestContext requestContext, Class<T> type);
-  Mono<R> patch(String id, JsonPatch jsonPatch);
-  Mono<R> patch(String id, JsonPatch jsonPatch, TmfRequestContext requestContext);
-  <T> Mono<T> patch(String id, JsonPatch jsonPatch, Class<T> type);
-  <T> Mono<T> patch(String id, JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type);
 
   Mono<R> patchWithToken(String token, String id, U obj);
   Mono<R> patchWithToken(String token, String id, U obj, TmfRequestContext requestContext);
   <T> Mono<T> patchWithToken(String token, String id, U obj, Class<T> type);
   <T> Mono<T> patchWithToken(String token, String id, U obj, TmfRequestContext requestContext, Class<T> type);
+
+  Mono<R> patch(String id, JsonPatch jsonPatch);
+  Mono<R> patch(String id, JsonPatch jsonPatch, TmfRequestContext requestContext);
+  <T> Mono<T> patch(String id, JsonPatch jsonPatch, Class<T> type);
+  <T> Mono<T> patch(String id, JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type);
+
   Mono<R> patchWithToken(String token, String id, JsonPatch jsonPatch);
   Mono<R> patchWithToken(String token, String id, JsonPatch jsonPatch, TmfRequestContext requestContext);
   <T> Mono<T> patchWithToken(String token, String id, JsonPatch jsonPatch, Class<T> type);
