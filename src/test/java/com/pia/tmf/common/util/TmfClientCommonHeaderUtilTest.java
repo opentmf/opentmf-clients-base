@@ -8,8 +8,8 @@ import static org.mockito.Mockito.when;
 
 import com.pia.client.common.service.api.TokenService;
 import com.pia.tmf.common.config.TmfClientConfigurations;
-import com.pia.tmf.common.model.RetrievalContext;
 import com.pia.tmf.common.model.TmfOffsetRequest;
+import com.pia.tmf.common.model.TmfRequestContext;
 import java.util.HashMap;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Assertions;
@@ -70,7 +70,7 @@ class TmfClientCommonHeaderUtilTest {
   void testPrepareHeaderConsumerWithAuthTokenAndPageQuery() {
     String authToken = "testToken";
     Pageable pageQuery = mock(TmfOffsetRequest.class);
-    when(((TmfOffsetRequest) pageQuery).getRetrievalContext()).thenReturn(null);
+    when(((TmfOffsetRequest) pageQuery).getRequestContext()).thenReturn(null);
     Consumer<HttpHeaders> consumer =
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken, pageQuery, getTokenService());
     HttpHeaders httpHeaders = new HttpHeaders();
@@ -85,7 +85,7 @@ class TmfClientCommonHeaderUtilTest {
         mock(TmfClientConfigurations.TmfClientConfig.class);
     when(config.getFixedHeaders()).thenReturn(new HashMap<>());
     Pageable pageQuery = mock(TmfOffsetRequest.class);
-    when(((TmfOffsetRequest) pageQuery).getRetrievalContext()).thenReturn(null);
+    when(((TmfOffsetRequest) pageQuery).getRequestContext()).thenReturn(null);
     Consumer<HttpHeaders> consumer =
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken, config, pageQuery,
             getTokenService());
@@ -97,10 +97,10 @@ class TmfClientCommonHeaderUtilTest {
   @Test
   void testPrepareHeaderConsumerWithAuthTokenAndRetrievalContext() {
     String authToken = "testToken";
-    RetrievalContext retrievalContext = mock(RetrievalContext.class);
-    when(retrievalContext.getHeaderParameters()).thenReturn(new LinkedMultiValueMap<>());
+    TmfRequestContext requestContext = mock(TmfRequestContext.class);
+    when(requestContext.getHeaderParameters()).thenReturn(new LinkedMultiValueMap<>());
     Consumer<HttpHeaders> consumer =
-        TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken, retrievalContext,
+        TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken, requestContext,
             getTokenService());
     HttpHeaders httpHeaders = new HttpHeaders();
     consumer.accept(httpHeaders);
@@ -113,10 +113,10 @@ class TmfClientCommonHeaderUtilTest {
     TmfClientConfigurations.TmfClientConfig config =
         mock(TmfClientConfigurations.TmfClientConfig.class);
     when(config.getFixedHeaders()).thenReturn(new HashMap<>());
-    RetrievalContext retrievalContext = mock(RetrievalContext.class);
-    when(retrievalContext.getHeaderParameters()).thenReturn(new LinkedMultiValueMap<>());
+    TmfRequestContext requestContext = mock(TmfRequestContext.class);
+    when(requestContext.getHeaderParameters()).thenReturn(new LinkedMultiValueMap<>());
     Consumer<HttpHeaders> consumer =
-        TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken, config, retrievalContext,
+        TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken, config, requestContext,
             getTokenService());
     HttpHeaders httpHeaders = new HttpHeaders();
     consumer.accept(httpHeaders);
@@ -149,7 +149,7 @@ class TmfClientCommonHeaderUtilTest {
   void testGetHeadersConsumerWithAuthTokenAndPageQuery() {
     String authToken = "testToken";
     Pageable pageQuery = mock(TmfOffsetRequest.class);
-    when(((TmfOffsetRequest) pageQuery).getRetrievalContext()).thenReturn(null);
+    when(((TmfOffsetRequest) pageQuery).getRequestContext()).thenReturn(null);
     Consumer<HttpHeaders> consumer =
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken, pageQuery, getTokenService());
     HttpHeaders httpHeaders = new HttpHeaders();
@@ -160,10 +160,10 @@ class TmfClientCommonHeaderUtilTest {
   @Test
   void testGetHeadersConsumerWithAuthTokenAndRetrievalContext() {
     String authToken = "testToken";
-    RetrievalContext retrievalContext = mock(RetrievalContext.class);
-    when(retrievalContext.getHeaderParameters()).thenReturn(new LinkedMultiValueMap<>());
+    TmfRequestContext requestContext = mock(TmfRequestContext.class);
+    when(requestContext.getHeaderParameters()).thenReturn(new LinkedMultiValueMap<>());
     Consumer<HttpHeaders> consumer =
-        TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken, retrievalContext,
+        TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken, requestContext,
             getTokenService());
     HttpHeaders httpHeaders = new HttpHeaders();
     consumer.accept(httpHeaders);
@@ -176,10 +176,10 @@ class TmfClientCommonHeaderUtilTest {
     TmfClientConfigurations.TmfClientConfig config =
         mock(TmfClientConfigurations.TmfClientConfig.class);
     when(config.getFixedHeaders()).thenReturn(new HashMap<>());
-    RetrievalContext retrievalContext = mock(RetrievalContext.class);
-    when(retrievalContext.getHeaderParameters()).thenReturn(new LinkedMultiValueMap<>());
+    TmfRequestContext requestContext = mock(TmfRequestContext.class);
+    when(requestContext.getHeaderParameters()).thenReturn(new LinkedMultiValueMap<>());
     Consumer<HttpHeaders> consumer = TmfClientCommonHeaderUtil.prepareHeaderConsumer(authToken,
-        config, retrievalContext, getTokenService());
+        config, requestContext, getTokenService());
     HttpHeaders httpHeaders = new HttpHeaders();
     consumer.accept(httpHeaders);
     assertEquals("Bearer " + authToken, httpHeaders.getFirst(HttpHeaders.AUTHORIZATION));

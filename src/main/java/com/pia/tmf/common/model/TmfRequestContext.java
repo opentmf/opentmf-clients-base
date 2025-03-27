@@ -17,7 +17,7 @@ import org.springframework.util.MultiValueMap;
 @Getter
 @Setter
 @RequiredArgsConstructor
-public class RetrievalContext {
+public class TmfRequestContext {
   /** The set of fields to include or exclude in the query result. */
   private Set<String> fields;
 
@@ -26,10 +26,13 @@ public class RetrievalContext {
 
   private MultiValueMap<String, String> headerParameters;
 
-  private RetrievalContext(Builder builder) {
+  private MultiValueMap<String, String> queryParameters;
+
+  private TmfRequestContext(Builder builder) {
     this.fields = builder.fields;
     this.jsonFilter = builder.jsonFilter;
     this.headerParameters = builder.headerParameters;
+    this.queryParameters = builder.queryParameters;
   }
 
   /**
@@ -54,6 +57,7 @@ public class RetrievalContext {
     private Set<String> fields;
     private JsonFilter jsonFilter;
     private MultiValueMap<String, String> headerParameters;
+    private MultiValueMap<String, String> queryParameters;
 
     public Builder withFields(Set<String> fields) {
       this.fields = fields;
@@ -102,8 +106,21 @@ public class RetrievalContext {
       return this;
     }
 
-    public RetrievalContext build() {
-      return new RetrievalContext(this);
+    public Builder withQueryParameters(MultiValueMap<String, String> queryParameters) {
+      this.queryParameters = queryParameters;
+      return this;
+    }
+
+    public Builder withQueryParameters(String key, String... values) {
+      if (this.queryParameters == null) {
+        this.queryParameters = new LinkedMultiValueMap<>();
+      }
+      this.queryParameters.addAll(key, List.of(values));
+      return this;
+    }
+
+    public TmfRequestContext build() {
+      return new TmfRequestContext(this);
     }
   }
 
@@ -111,10 +128,11 @@ public class RetrievalContext {
     return new Builder();
   }
 
-  public static Builder builder(RetrievalContext retrievalContext) {
+  public static Builder builder(TmfRequestContext requestContext) {
     return builder()
-        .withFields(retrievalContext.getFields())
-        .withJsonFilter(retrievalContext.getJsonFilter())
-        .withHeaderValues(retrievalContext.getHeaderParameters());
+        .withFields(requestContext.getFields())
+        .withJsonFilter(requestContext.getJsonFilter())
+        .withHeaderValues(requestContext.getHeaderParameters())
+        .withQueryParameters(requestContext.getQueryParameters());
   }
 }

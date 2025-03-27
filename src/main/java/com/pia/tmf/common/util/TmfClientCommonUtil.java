@@ -14,11 +14,11 @@ import com.pia.tmf.common.exception.TmfClientException;
 import com.pia.tmf.common.model.ErrorMessage;
 import com.pia.tmf.common.model.JsonFilter;
 import com.pia.tmf.common.model.OffsetPage;
-import com.pia.tmf.common.model.RetrievalContext;
 import com.pia.tmf.common.model.Scope;
 import com.pia.tmf.common.model.TmfClientCommonsConstants;
 import com.pia.tmf.common.model.TmfOffsetRequest;
 import com.pia.tmf.common.model.TmfPage;
+import com.pia.tmf.common.model.TmfRequestContext;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -111,27 +111,29 @@ public final class TmfClientCommonUtil {
    *
    * @param config The TMF client configuration containing base URL and context path.
    * @param id The ID value to be included in the URI.
-   * @param retrievalContext The filter object containing filter parameters.
+   * @param requestContext The filter object containing filter parameters.
    * @return The constructed URI.
    */
   public static URI buildUriWithId(
-      TmfClientConfig config,
-      String id,
-      RetrievalContext retrievalContext) {
+      TmfClientConfig config, String id, TmfRequestContext requestContext) {
     Objects.requireNonNull(id, TmfClientCommonsConstants.ERROR_MSG_ID_RESPONSE);
-    UriComponentsBuilder uriComponentsBuilder =
+    var uriComponentsBuilder =
         UriComponentsBuilder.fromUriString(config.getBaseUrl())
             .path(config.getContextPath())
             .path(config.getEndpoint())
+            .queryParams(requestContext != null ? requestContext.getQueryParameters() : null)
             .path("/{id}");
 
-    if (retrievalContext.getJsonFilterType() == JsonFilter.TYPE.SERVER) {
-      uriComponentsBuilder.queryParam(FILTER, retrievalContext.getJsonFilterQuery());
+    if (requestContext != null) {
+      if (requestContext.getJsonFilterType() == JsonFilter.TYPE.SERVER) {
+        uriComponentsBuilder.queryParam(FILTER, requestContext.getJsonFilterQuery());
+      }
+
+      if (requestContext.getFields() != null && !requestContext.getFields().isEmpty()) {
+        uriComponentsBuilder.queryParam(FIELDS, prepareFieldsQuery(requestContext.getFields()));
+      }
     }
 
-    if (retrievalContext.getFields() != null && !retrievalContext.getFields().isEmpty()) {
-      uriComponentsBuilder.queryParam(FIELDS, prepareFieldsQuery(retrievalContext.getFields()));
-    }
     return uriComponentsBuilder.build(id);
   }
 
@@ -143,8 +145,7 @@ public final class TmfClientCommonUtil {
    * @param queryParams The query parameters to be included in the URI.
    * @return The constructed URI.
    */
-  public static URI buildUri(
-      TmfClientConfig config, MultiValueMap<String, String> queryParams) {
+  public static URI buildUri(TmfClientConfig config, MultiValueMap<String, String> queryParams) {
     return UriComponentsBuilder.fromUriString(config.getBaseUrl())
         .path(config.getContextPath())
         .path(config.getEndpoint())
@@ -153,23 +154,32 @@ public final class TmfClientCommonUtil {
         .toUri();
   }
 
-  private static URI updateUri(URI uri, RetrievalContext retrievalContext) {
-    UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUri(uri);
-    if (retrievalContext.getJsonFilterType() == JsonFilter.TYPE.SERVER) {
-      uriComponentsBuilder.queryParam(FILTER, retrievalContext.getJsonFilterQuery());
+  public static URI buildUri(TmfClientConfig config, TmfRequestContext requestContext) {
+    return UriComponentsBuilder.fromUriString(config.getBaseUrl())
+        .path(config.getContextPath())
+        .path(config.getEndpoint())
+        .queryParams(requestContext != null ? requestContext.getQueryParameters() : null)
+        .build()
+        .toUri();
+  }
+
+  private static URI updateUri(URI uri, TmfRequestContext requestContext) {
+    var uriComponentsBuilder = UriComponentsBuilder.fromUri(uri);
+    if (requestContext.getJsonFilterType() == JsonFilter.TYPE.SERVER) {
+      uriComponentsBuilder.queryParam(FILTER, requestContext.getJsonFilterQuery());
     }
-    if (retrievalContext.getFields() != null && !retrievalContext.getFields().isEmpty()) {
-      uriComponentsBuilder.queryParam(FIELDS, prepareFieldsQuery(retrievalContext.getFields()));
+    if (requestContext.getFields() != null && !requestContext.getFields().isEmpty()) {
+      uriComponentsBuilder.queryParam(FIELDS, prepareFieldsQuery(requestContext.getFields()));
     }
     return uriComponentsBuilder.build().toUri();
   }
 
   private static URI updateUri(URI uri, Pageable pageable) {
-    UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUri(uri);
+    var uriComponentsBuilder = UriComponentsBuilder.fromUri(uri);
     uriComponentsBuilder.queryParam("offset", pageable.getOffset());
     uriComponentsBuilder.queryParam("limit", pageable.getPageSize());
     if (!pageable.getSort().isEmpty()) {
-      String sortQuery = sortStringQuery(pageable.getSort());
+      var sortQuery = sortStringQuery(pageable.getSort());
       uriComponentsBuilder.queryParam("sort", sortQuery);
     }
 
@@ -179,6 +189,10 @@ public final class TmfClientCommonUtil {
       }
       if (tmfOffsetRequest.getFields() != null && !tmfOffsetRequest.getFields().isEmpty()) {
         uriComponentsBuilder.queryParam(FIELDS, prepareFieldsQuery(tmfOffsetRequest.getFields()));
+      }
+      if (tmfOffsetRequest.getQueryParameters() != null
+          && !tmfOffsetRequest.getQueryParameters().isEmpty()) {
+        uriComponentsBuilder.queryParams(tmfOffsetRequest.getQueryParameters());
       }
     }
     return uriComponentsBuilder.build().toUri();
@@ -323,7 +337,7 @@ public final class TmfClientCommonUtil {
    * @param errorhandler Function to handle errors.
    * @param t The class type of the expected response.
    * @param properties The properties governing the behavior of the request.
-   * @param retrievalContext The filter to apply to the response.
+   * @param requestContext The filter to apply to the response.
    * @param <T> The type of the expected response.
    * @return A Mono emitting the response object.
    * @throws NullPointerException if any of the required parameters is null.
@@ -335,12 +349,12 @@ public final class TmfClientCommonUtil {
       Function<ClientResponse, Mono<? extends Throwable>> errorhandler,
       Class<T> t,
       BaseClientProperties properties,
-      RetrievalContext retrievalContext) {
+      TmfRequestContext requestContext) {
 
-    URI updateUri = updateUri(uri, retrievalContext);
-    if (retrievalContext.getJsonFilterType() == JsonFilter.TYPE.CLIENT) {
+    var updateUri = updateUri(uri, requestContext);
+    if (requestContext.getJsonFilterType() == JsonFilter.TYPE.CLIENT) {
       return getRequestWithClientFilter(
-          webClient, updateUri, headersConsumer, errorhandler, t, properties, retrievalContext);
+          webClient, updateUri, headersConsumer, errorhandler, t, properties, requestContext);
     }
     return getRequest(webClient, updateUri, headersConsumer, errorhandler, t, properties);
   }
@@ -372,9 +386,9 @@ public final class TmfClientCommonUtil {
       Function<ClientResponse, Mono<? extends Throwable>> errorhandler,
       Class<T> t,
       BaseClientProperties properties,
-      RetrievalContext retrievalContext) {
+      TmfRequestContext requestContext) {
     return getRequest(webClient, uri, headersConsumer, errorhandler, Object.class, properties)
-        .map(object -> JsonPath.read(object, retrievalContext.getJsonFilterQuery()));
+        .map(object -> JsonPath.read(object, requestContext.getJsonFilterQuery()));
   }
 
   /**
@@ -398,7 +412,8 @@ public final class TmfClientCommonUtil {
       Function<ClientResponse, Mono<? extends Throwable>> errorhandler,
       Class<T> t,
       BaseClientProperties properties) {
-    return retrieveSinglePage(webClient, uri, headersConsumer, errorhandler, t, properties);
+    return retrieveSinglePage(
+        webClient, uri, headersConsumer, errorhandler, t, properties, TmfOffsetRequest.of(0));
   }
 
   /**
@@ -450,9 +465,8 @@ public final class TmfClientCommonUtil {
 
     if (pageQuery instanceof TmfOffsetRequest tmfOffsetRequest
         && (tmfOffsetRequest.getJsonFilterTYpe() == JsonFilter.TYPE.CLIENT)) {
-        return retrieveAllPagesWithClientFilter(
-            webClient, url, headersConsumer, errorhandler, type, properties, tmfOffsetRequest);
-
+      return retrieveAllPagesWithClientFilter(
+          webClient, url, headersConsumer, errorhandler, type, properties, tmfOffsetRequest);
     }
 
     return retrieveAllPagesWithServerFilter(
@@ -492,7 +506,7 @@ public final class TmfClientCommonUtil {
             tmfOffsetRequest)
         .collectList()
         .flatMapMany(
-            objects -> {
+            (List<Object> objects) -> {
               List<T> result = JsonPath.read(objects, tmfOffsetRequest.getJsonFilter().getQuery());
               return Flux.fromIterable(
                   result.stream()
@@ -525,30 +539,6 @@ public final class TmfClientCommonUtil {
       Pageable pageQuery) {
     return recursiveRetrieve(
         webClient, url, headersConsumer, errorhandler, type, properties, pageQuery);
-  }
-
-  /**
-   * Retrieves a single page of data from the specified URI with the provided access token, handling
-   * errors and retries as per the provided properties.
-   *
-   * @param webClient The WebClient instance to use for making the request.
-   * @param url The base URL from which data is retrieved.
-   * @param headersConsumer The authentication token used for authorization.
-   * @param errorhandler Function to handle errors.
-   * @param type The class type of the expected response.
-   * @param properties The properties governing the behavior of the request.
-   * @param <T> The type of the expected response.
-   * @return A Flux emitting the response objects.
-   */
-  public static <T> Flux<T> retrieveSinglePage(
-      WebClient webClient,
-      URI url,
-      Consumer<HttpHeaders> headersConsumer,
-      Function<ClientResponse, Mono<? extends Throwable>> errorhandler,
-      Class<T> type,
-      BaseClientProperties properties) {
-    return retrieveSinglePage(
-        webClient, url, headersConsumer, errorhandler, type, properties, TmfOffsetRequest.of(0));
   }
 
   /**
@@ -653,7 +643,7 @@ public final class TmfClientCommonUtil {
       Class<T> t,
       BaseClientProperties properties,
       Pageable pageQuery) {
-    URI updatedUri = updateUri(uri, pageQuery);
+    var updatedUri = updateUri(uri, pageQuery);
     return getAllRequestWithResponseEntity(
         webClient, updatedUri, httpHeadersConsumer, errorhandler, t, properties);
   }
@@ -749,7 +739,7 @@ public final class TmfClientCommonUtil {
     return retrieveSinglePageWithPageResponse(
             webClient, url, headersConsumer, errorhandler, type, properties, pageQuery)
         .flatMapMany(
-            pagedResponse -> {
+            (TmfPage<Flux<T>> pagedResponse) -> {
               if (pagedResponse.isLast()) {
                 return pagedResponse.getContent();
               } else {
@@ -795,8 +785,8 @@ public final class TmfClientCommonUtil {
   private static int getItemCountFromContentRange(String contentRange) {
     String[] parts = contentRange.replace("items ", "").split("/");
     String[] rangeParts = parts[0].split("-");
-    int rangeStart = Integer.parseInt(rangeParts[0].trim());
-    int rangeEnd = Integer.parseInt(rangeParts[1].trim());
+    var rangeStart = Integer.parseInt(rangeParts[0].trim());
+    var rangeEnd = Integer.parseInt(rangeParts[1].trim());
     return rangeEnd - rangeStart + 1;
   }
 
@@ -810,7 +800,9 @@ public final class TmfClientCommonUtil {
   }
 
   public static <T> TmfClientException createException(
-      HttpStatusCode httpStatusCode, ErrorMessage errorMessage, Class<? extends TmfClientException> exception) {
+      HttpStatusCode httpStatusCode,
+      ErrorMessage errorMessage,
+      Class<? extends TmfClientException> exception) {
     try {
       return exception
           .getDeclaredConstructor(HttpStatusCode.class, ErrorMessage.class)
@@ -822,7 +814,7 @@ public final class TmfClientCommonUtil {
 
   private static void validateHeadersConsumer(Consumer<HttpHeaders> headersConsumer) {
     if (headersConsumer != null) {
-      HttpHeaders headers = new HttpHeaders();
+      var headers = new HttpHeaders();
       headersConsumer.accept(headers);
       String authorizationHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
 

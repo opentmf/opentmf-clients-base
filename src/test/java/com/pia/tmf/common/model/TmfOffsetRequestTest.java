@@ -62,7 +62,7 @@ class TmfOffsetRequestTest {
 
   @Test
   void withEverything() {
-    RetrievalContext retrievalContext = RetrievalContext.builder()
+    TmfRequestContext requestContext = TmfRequestContext.builder()
         .withFields("id", "href", "version")
         .withHeaderValues("header1", "value1")
         .withHeaderValues("header2", "value2")
@@ -70,7 +70,7 @@ class TmfOffsetRequestTest {
         .build();
     TmfOffsetRequest request = TmfOffsetRequest.of(0, 10,
             Sort.by(Order.asc("name"), Order.desc("surname")))
-        .withRetrievalContext(retrievalContext);
+        .withRequestContext(requestContext);
     Assertions.assertNotNull(request);
   }
 
@@ -79,7 +79,7 @@ class TmfOffsetRequestTest {
     TmfOffsetRequest request = TmfOffsetRequest.of(0, 10);
     TmfOffsetRequest withFields = request.withFields("test");
 
-    assertEquals(Set.of("test"), withFields.getRetrievalContext().getFields());
+    assertEquals(Set.of("test"), withFields.getRequestContext().getFields());
   }
 
   @Test
@@ -87,9 +87,9 @@ class TmfOffsetRequestTest {
     TmfOffsetRequest request = TmfOffsetRequest.of(0, 10);
     TmfOffsetRequest withFilter = request.withClientFilter("test");
 
-    assertEquals("test", withFilter.getRetrievalContext().getJsonFilter().getQuery());
+    assertEquals("test", withFilter.getRequestContext().getJsonFilter().getQuery());
     assertEquals(
-        JsonFilter.TYPE.CLIENT, withFilter.getRetrievalContext().getJsonFilter().getType());
+        JsonFilter.TYPE.CLIENT, withFilter.getRequestContext().getJsonFilter().getType());
   }
 
   @Test

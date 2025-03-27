@@ -40,8 +40,8 @@ import com.pia.tmf.common.helper.MockServerUtils;
 import com.pia.tmf.common.helper.TestResponseModel;
 import com.pia.tmf.common.model.ErrorMessage;
 import com.pia.tmf.common.model.JsonFilter;
-import com.pia.tmf.common.model.RetrievalContext;
 import com.pia.tmf.common.model.TmfOffsetRequest;
+import com.pia.tmf.common.model.TmfRequestContext;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
@@ -185,11 +185,11 @@ class TmfClientCommonUtilIT {
 
     String id = "testId";
 
-    RetrievalContext retrievalContext = new RetrievalContext();
-    retrievalContext.setJsonFilter(JsonFilter.of("query", JsonFilter.TYPE.SERVER));
-    retrievalContext.setFields(Set.of("field1"));
+    TmfRequestContext requestContext = new TmfRequestContext();
+    requestContext.setJsonFilter(JsonFilter.of("query", JsonFilter.TYPE.SERVER));
+    requestContext.setFields(Set.of("field1"));
 
-    URI result = TmfClientCommonUtil.buildUriWithId(clientConfig, id, retrievalContext);
+    URI result = TmfClientCommonUtil.buildUriWithId(clientConfig, id, requestContext);
 
     assertEquals(
         clientConfig.getBaseUrl()
@@ -201,11 +201,11 @@ class TmfClientCommonUtilIT {
   @Test
   void testBuildUriWithNullId() {
     TmfClientConfigurations.TmfClientConfig config = new TmfClientConfigurations.TmfClientConfig();
-    RetrievalContext retrievalContext = new RetrievalContext();
+    TmfRequestContext requestContext = new TmfRequestContext();
 
     assertThrows(
         NullPointerException.class,
-        () -> TmfClientCommonUtil.buildUriWithId(config, null, retrievalContext));
+        () -> TmfClientCommonUtil.buildUriWithId(config, null, requestContext));
   }
 
   @Test
@@ -346,8 +346,8 @@ class TmfClientCommonUtilIT {
     var uri = createURI(SH_TMF_CLIENTS);
     MockServerUtils.setUpDynamicPostCallback(
         TMF_PATH, Headers.headers(Header.header("header1", "value1", "value2")));
-    RetrievalContext context =
-        RetrievalContext.builder().withHeaderValues("header1", "value1", "value2").build();
+    TmfRequestContext context =
+        TmfRequestContext.builder().withHeaderValues("header1", "value1", "value2").build();
     var response =
         shTokenService
             .getToken()
@@ -415,7 +415,7 @@ class TmfClientCommonUtilIT {
                         this::mockHandleError,
                         TestResponseModel.class,
                         shClientProperties,
-                        RetrievalContext.builder().withFields("id").build()));
+                        TmfRequestContext.builder().withFields("id").build()));
 
     StepVerifier.create(response)
         .assertNext(
@@ -445,7 +445,7 @@ class TmfClientCommonUtilIT {
                         this::mockHandleError,
                         TestResponseModel.class,
                         shClientProperties,
-                        RetrievalContext.builder()
+                        TmfRequestContext.builder()
                             .withFields("id")
                             .withHeaderValues("header1", "value1", "value2")
                             .build()));
@@ -476,7 +476,7 @@ class TmfClientCommonUtilIT {
                         this::mockHandleError,
                         String.class,
                         shClientProperties,
-                        RetrievalContext.builder().withClientJsonFilter("$.id").build()));
+                        TmfRequestContext.builder().withClientJsonFilter("$.id").build()));
 
     StepVerifier.create(response)
         .assertNext(
@@ -504,7 +504,7 @@ class TmfClientCommonUtilIT {
                         this::mockHandleError,
                         TestResponseModel.class,
                         shClientProperties,
-                        RetrievalContext.builder().withServerJsonFilter("$.id").build()));
+                        TmfRequestContext.builder().withServerJsonFilter("$.id").build()));
 
     StepVerifier.create(response)
         .assertNext(
@@ -584,8 +584,8 @@ class TmfClientCommonUtilIT {
     var patch =
         new JsonPatch(
             List.of(new ReplaceOperation(new JsonPointer("/name"), new TextNode("test_patch"))));
-    RetrievalContext context =
-        RetrievalContext.builder().withHeaderValues("ifMatch", "true").build();
+    TmfRequestContext context =
+        TmfRequestContext.builder().withHeaderValues("ifMatch", "true").build();
 
     var uri = createURI(SH_TMF_CLIENTS, id);
     var response =
@@ -1020,7 +1020,8 @@ class TmfClientCommonUtilIT {
                         TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getTokenService()),
                         this::mockHandleError,
                         TestResponseModel.class,
-                        shClientProperties));
+                        shClientProperties,
+                        TmfOffsetRequest.of(0)));
 
     StepVerifier.create(response)
         .assertNext(
@@ -1052,7 +1053,8 @@ class TmfClientCommonUtilIT {
                         TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getTokenService()),
                         this::mockHandleError,
                         TestResponseModel.class,
-                        shClientProperties));
+                        shClientProperties,
+                        TmfOffsetRequest.of(0)));
 
     StepVerifier.create(response)
         .assertNext(

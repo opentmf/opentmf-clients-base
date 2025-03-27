@@ -7,13 +7,9 @@ import com.pia.client.common.service.api.TokenService;
 import com.pia.tmf.common.client.api.TmfClient;
 import com.pia.tmf.common.config.TmfClientConfigurations.TmfClientConfig;
 import com.pia.tmf.common.exception.TmfClientException;
-import com.pia.tmf.common.model.ErrorMessage;
-import com.pia.tmf.common.model.RetrievalContext;
-import com.pia.tmf.common.model.Scope;
-import com.pia.tmf.common.model.TmfPage;
+import com.pia.tmf.common.model.*;
 import com.pia.tmf.common.util.TmfClientCommonHeaderUtil;
 import com.pia.tmf.common.util.TmfClientCommonUtil;
-import java.net.URI;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.MultiValueMap;
@@ -73,8 +69,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
-  public Mono<R> get(String id, RetrievalContext retrievalContext) {
-    return get(id, retrievalContext, getType());
+  public Mono<R> get(String id, TmfRequestContext requestContext) {
+    return get(id, requestContext, getType());
   }
 
   @Override
@@ -83,8 +79,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
-  public <T> Mono<T> get(String id, RetrievalContext retrievalContext, Class<T> type) {
-    return getToken(Scope.GET).flatMap(token -> getWithToken(token, id, retrievalContext, type));
+  public <T> Mono<T> get(String id, TmfRequestContext requestContext, Class<T> type) {
+    return getToken(Scope.GET).flatMap(token -> getWithToken(token, id, requestContext, type));
   }
 
   @Override
@@ -93,13 +89,13 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
-  public Mono<R> getWithToken(String token, String id, RetrievalContext retrievalContext) {
-    return getWithToken(token, id, retrievalContext, getType());
+  public Mono<R> getWithToken(String token, String id, TmfRequestContext requestContext) {
+    return getWithToken(token, id, requestContext, getType());
   }
 
   @Override
   public <T> Mono<T> getWithToken(String token, String id, Class<T> type) {
-    URI uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
+    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
     return TmfClientCommonUtil.getRequest(
         getWebClient(),
         uri,
@@ -111,16 +107,16 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public <T> Mono<T> getWithToken(
-      String token, String id, RetrievalContext retrievalContext, Class<T> type) {
-    URI uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
+          String token, String id, TmfRequestContext requestContext, Class<T> type) {
+    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id, requestContext);
     return TmfClientCommonUtil.getRequest(
         getWebClient(),
         uri,
-        TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), retrievalContext, getTokenService()),
+        TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), requestContext, getTokenService()),
         this::handleError,
         type,
         getClientProperties(),
-        retrievalContext);
+            requestContext);
   }
 
   @Override
@@ -145,19 +141,20 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public Flux<R> listWithToken(String token) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig());
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig());
     return TmfClientCommonUtil.retrieveSinglePage(
         getWebClient(),
         uri,
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
         this::handleError,
         getType(),
-        getClientProperties());
+        getClientProperties(),
+        TmfOffsetRequest.of(0));
   }
 
   @Override
   public Flux<R> listWithToken(String token, Pageable pageable) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig());
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig());
     return TmfClientCommonUtil.retrieveSinglePage(
         getWebClient(),
         uri,
@@ -170,20 +167,23 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public Flux<R> listWithToken(String token, MultiValueMap<String, String> param) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
+    var pageable = TmfOffsetRequest.of().withQueryParameters(param);
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig());
     return TmfClientCommonUtil.retrieveSinglePage(
         getWebClient(),
         uri,
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
         this::handleError,
         getType(),
-        getClientProperties());
+        getClientProperties(),
+        pageable);
   }
 
   @Override
   public Flux<R> listWithToken(
       String token, MultiValueMap<String, String> param, Pageable pageable) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
+    var tmfOffsetRequest = TmfOffsetRequest.of(pageable).withQueryParameters(param);
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
     return TmfClientCommonUtil.retrieveSinglePage(
         getWebClient(),
         uri,
@@ -191,7 +191,7 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
         this::handleError,
         getType(),
         getClientProperties(),
-        pageable);
+        tmfOffsetRequest);
   }
 
   @Override
@@ -216,19 +216,20 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public Flux<R> listAllWithToken(String token) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig());
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig());
     return TmfClientCommonUtil.retrieveAllPages(
         getWebClient(),
         uri,
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
         this::handleError,
         getType(),
-        getClientProperties());
+        getClientProperties(),
+            TmfOffsetRequest.of());
   }
 
   @Override
   public Flux<R> listAllWithToken(String token, Pageable pageable) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig());
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig());
     return TmfClientCommonUtil.retrieveAllPages(
         getWebClient(),
         uri,
@@ -241,20 +242,23 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public Flux<R> listAllWithToken(String token, MultiValueMap<String, String> param) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
+    var pageable = TmfOffsetRequest.of().withQueryParameters(param);
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
     return TmfClientCommonUtil.retrieveAllPages(
         getWebClient(),
         uri,
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
         this::handleError,
         getType(),
-        getClientProperties());
+        getClientProperties(),
+        pageable);
   }
 
   @Override
   public Flux<R> listAllWithToken(
       String token, MultiValueMap<String, String> param, Pageable pageable) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
+    var tmfOffsetRequest = TmfOffsetRequest.of(pageable).withQueryParameters(param);
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
     return TmfClientCommonUtil.retrieveAllPages(
         getWebClient(),
         uri,
@@ -262,7 +266,7 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
         this::handleError,
         getType(),
         getClientProperties(),
-        pageable);
+        tmfOffsetRequest);
   }
 
   @Override
@@ -287,19 +291,20 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public Mono<TmfPage<Flux<R>>> listPagedWithToken(String token) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig());
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig());
     return TmfClientCommonUtil.retrieveSinglePageWithPageResponse(
         getWebClient(),
         uri,
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
         this::handleError,
         getType(),
-        getClientProperties());
+        getClientProperties(),
+        TmfOffsetRequest.of(0));
   }
 
   @Override
   public Mono<TmfPage<Flux<R>>> listPagedWithToken(String token, Pageable pageable) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig());
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig());
     return TmfClientCommonUtil.retrieveSinglePageWithPageResponse(
         getWebClient(),
         uri,
@@ -313,20 +318,23 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   @Override
   public Mono<TmfPage<Flux<R>>> listPagedWithToken(
       String token, MultiValueMap<String, String> param) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
+    var pageable = TmfOffsetRequest.of(0).withQueryParameters(param);
     return TmfClientCommonUtil.retrieveSinglePageWithPageResponse(
         getWebClient(),
         uri,
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
         this::handleError,
         getType(),
-        getClientProperties());
+        getClientProperties(),
+        pageable);
   }
 
   @Override
   public Mono<TmfPage<Flux<R>>> listPagedWithToken(
       String token, MultiValueMap<String, String> param, Pageable pageable) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
+    var tmfOffsetRequest = TmfOffsetRequest.of(pageable).withQueryParameters(param);
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig(), param);
     return TmfClientCommonUtil.retrieveSinglePageWithPageResponse(
         getWebClient(),
         uri,
@@ -334,7 +342,7 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
         this::handleError,
         getType(),
         getClientProperties(),
-        pageable);
+        tmfOffsetRequest);
   }
 
   @Override
@@ -343,8 +351,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
-  public Mono<R> post(C obj, RetrievalContext retrievalContext) {
-    return getToken(Scope.POST).flatMap(token -> postWithToken(token, obj, retrievalContext));
+  public Mono<R> post(C obj, TmfRequestContext requestContext) {
+    return getToken(Scope.POST).flatMap(token -> postWithToken(token, obj, requestContext));
   }
 
   @Override
@@ -353,8 +361,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
-  public <T> Mono<T> post(C obj, RetrievalContext retrievalContext, Class<T> type) {
-    return getToken(Scope.POST).flatMap(token -> postWithToken(token, obj, retrievalContext, type));
+  public <T> Mono<T> post(C obj, TmfRequestContext requestContext, Class<T> type) {
+    return getToken(Scope.POST).flatMap(token -> postWithToken(token, obj, requestContext, type));
   }
 
   @Override
@@ -363,8 +371,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
-  public Mono<R> postWithToken(String token, C obj, RetrievalContext retrievalContext) {
-    return postWithToken(token, obj, retrievalContext, getType());
+  public Mono<R> postWithToken(String token, C obj, TmfRequestContext requestContext) {
+    return postWithToken(token, obj, requestContext, getType());
   }
 
   @Override
@@ -374,13 +382,13 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public <T> Mono<T> postWithToken(
-      String token, C obj, RetrievalContext retrievalContext, Class<T> type) {
-    URI uri = TmfClientCommonUtil.buildUri(getClientConfig());
+          String token, C obj, TmfRequestContext requestContext, Class<T> type) {
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig(), requestContext);
     return TmfClientCommonUtil.postRequest(
         getWebClient(),
         uri,
         obj,
-        TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), retrievalContext, getTokenService()),
+        TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), requestContext, getTokenService()),
         type,
         this::handleError,
         getClientProperties());
@@ -392,8 +400,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
-  public Mono<R> patch(String id, U obj, RetrievalContext retrievalContext) {
-    return patch(id, obj, retrievalContext, getType());
+  public Mono<R> patch(String id, U obj, TmfRequestContext requestContext) {
+    return patch(id, obj, requestContext, getType());
   }
 
   @Override
@@ -402,9 +410,9 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
-  public <T> Mono<T> patch(String id, U obj, RetrievalContext retrievalContext, Class<T> type) {
+  public <T> Mono<T> patch(String id, U obj, TmfRequestContext requestContext, Class<T> type) {
     return getToken(Scope.PATCH)
-        .flatMap(token -> patchWithToken(token, id, obj, retrievalContext, type));
+        .flatMap(token -> patchWithToken(token, id, obj, requestContext, type));
   }
 
   @Override
@@ -412,8 +420,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
     return patch(id, jsonPatch, getType());
   }
 
-  public Mono<R> patch(String id, JsonPatch jsonPatch, RetrievalContext retrievalContext) {
-    return patch(id, jsonPatch, retrievalContext, getType());
+  public Mono<R> patch(String id, JsonPatch jsonPatch, TmfRequestContext requestContext) {
+    return patch(id, jsonPatch, requestContext, getType());
   }
 
   @Override
@@ -423,9 +431,9 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public <T> Mono<T> patch(
-      String id, JsonPatch jsonPatch, RetrievalContext retrievalContext, Class<T> type) {
+          String id, JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type) {
     return getToken(Scope.PATCH)
-        .flatMap(token -> patchWithToken(token, id, jsonPatch, retrievalContext, type));
+        .flatMap(token -> patchWithToken(token, id, jsonPatch, requestContext, type));
   }
 
   @Override
@@ -434,8 +442,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
-  public Mono<R> patchWithToken(String token, String id, U obj, RetrievalContext retrievalContext) {
-    return patchWithToken(token, id, obj, retrievalContext, getType());
+  public Mono<R> patchWithToken(String token, String id, U obj, TmfRequestContext requestContext) {
+    return patchWithToken(token, id, obj, requestContext, getType());
   }
 
   @Override
@@ -444,13 +452,13 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   public <T> Mono<T> patchWithToken(
-      String token, String id, U obj, RetrievalContext retrievalContext, Class<T> type) {
-    URI uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
+          String token, String id, U obj, TmfRequestContext requestContext, Class<T> type) {
+    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id, requestContext);
     return TmfClientCommonUtil.patchRequest(
         getWebClient(),
         uri,
         obj,
-        TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), retrievalContext, getTokenService()),
+        TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), requestContext, getTokenService()),
         this::handleError,
         type,
         getClientProperties());
@@ -463,8 +471,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public Mono<R> patchWithToken(
-      String token, String id, JsonPatch jsonPatch, RetrievalContext retrievalContext) {
-    return patchWithToken(token, id, jsonPatch, retrievalContext, getType());
+      String token, String id, JsonPatch jsonPatch, TmfRequestContext requestContext) {
+    return patchWithToken(token, id, jsonPatch, requestContext, getType());
   }
 
   @Override
@@ -477,14 +485,14 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
       String token,
       String id,
       JsonPatch jsonPatch,
-      RetrievalContext retrievalContext,
+      TmfRequestContext requestContext,
       Class<T> type) {
-    URI uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
+    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id, requestContext);
     return TmfClientCommonUtil.patchRequest(
         getWebClient(),
         uri,
         jsonPatch,
-        TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), retrievalContext, getTokenService()),
+        TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), requestContext, getTokenService()),
         this::handleError,
         type,
         getClientProperties());
@@ -497,7 +505,7 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public Mono<Void> deleteWithToken(String token, String id) {
-    URI uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
+    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
     return TmfClientCommonUtil.deleteRequest(
         getWebClient(),
         uri,
