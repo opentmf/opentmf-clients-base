@@ -1,11 +1,13 @@
 package com.pia.tmf.common.model;
 
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.springframework.lang.NonNull;
+import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -54,47 +56,54 @@ public class TmfRequestContext {
   }
 
   public static class Builder {
+
+    private static final String CAN_BE_SET_ONLY_ONCE = "JsonFilter can be set only once.";
+
     private Set<String> fields;
     private JsonFilter jsonFilter;
     private MultiValueMap<String, String> headerParameters;
     private MultiValueMap<String, String> queryParameters;
 
-    public Builder withFields(Set<String> fields) {
-      this.fields = fields;
+    public Builder withFields(@NonNull Set<String> fields) {
+      if (this.fields == null) {
+        this.fields = new LinkedHashSet<>(fields.size());
+      }
+      this.fields.addAll(fields);
       return this;
     }
 
-    public Builder withFields(String... fields) {
-      this.fields = (Set.of(fields));
+    public Builder withFields(@NonNull String... fields) {
+      if (this.fields == null) {
+        this.fields = new LinkedHashSet<>(fields.length);
+      }
+      this.fields.addAll(Set.of(fields));
       return this;
     }
 
     public Builder withServerJsonFilter(String query) {
+      Assert.isNull(this.jsonFilter, CAN_BE_SET_ONLY_ONCE);
       this.jsonFilter = JsonFilter.of(query, JsonFilter.TYPE.SERVER);
       return this;
     }
 
     public Builder withClientJsonFilter(String query) {
+      Assert.isNull(this.jsonFilter, CAN_BE_SET_ONLY_ONCE);
       this.jsonFilter = JsonFilter.of(query, JsonFilter.TYPE.CLIENT);
       return this;
     }
 
-    public Builder withJsonFilter(String query) {
-      return withServerJsonFilter(query);
-    }
-
     private Builder withJsonFilter(JsonFilter filter) {
+      Assert.isNull(this.jsonFilter, CAN_BE_SET_ONLY_ONCE);
       this.jsonFilter = filter;
       return this;
     }
 
-    public Builder withHeaderValues(MultiValueMap<String, String> headerParameters) {
-      this.headerParameters = headerParameters;
-      return this;
-    }
-
-    public Builder withHeaderValues(Map<String, List<String>> map) {
-      this.headerParameters = new LinkedMultiValueMap<>(map);
+    public Builder withHeaderValues(@NonNull MultiValueMap<String, String> headerParameters) {
+      if (this.headerParameters == null) {
+        this.headerParameters = headerParameters;
+      } else {
+        this.headerParameters.addAll(headerParameters);
+      }
       return this;
     }
 
@@ -106,8 +115,12 @@ public class TmfRequestContext {
       return this;
     }
 
-    public Builder withQueryParameters(MultiValueMap<String, String> queryParameters) {
-      this.queryParameters = queryParameters;
+    public Builder withQueryParameters(@NonNull MultiValueMap<String, String> queryParameters) {
+      if (this.queryParameters == null) {
+        this.queryParameters = queryParameters;
+      } else {
+        this.queryParameters.addAll(queryParameters);
+      }
       return this;
     }
 
