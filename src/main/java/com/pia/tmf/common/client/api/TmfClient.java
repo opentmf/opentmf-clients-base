@@ -4,7 +4,6 @@ import com.github.fge.jsonpatch.JsonPatch;
 import com.pia.tmf.common.model.TmfPage;
 import com.pia.tmf.common.model.TmfRequestContext;
 import org.springframework.data.domain.Pageable;
-import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,34 +27,38 @@ public interface TmfClient<C, U, R> {
    * @return A flux containing the result objects.
    */
   Flux<R> list();
+  <T>Flux<T> list(Class<T> type);
   Flux<R> list(Pageable request);
-  Flux<R> list(MultiValueMap<String, String> param);
-  Flux<R> list(MultiValueMap<String, String> param, Pageable request);
+  <T>Flux<T> list(Pageable request, Class<T> type);
 
   Flux<R> listWithToken(String token);
+  <T>Flux<T> listWithToken(String token, Class<T> type);
   Flux<R> listWithToken(String token, Pageable request);
-  Flux<R> listWithToken(String token, MultiValueMap<String, String> param);
-  Flux<R> listWithToken(String token, MultiValueMap<String, String> param, Pageable request);
+  <T>Flux<T> listWithToken(String token, Pageable request, Class<T> type);
+
 
   Flux<R> listAll();
+  <T>Flux<T> listAll(Class<T> type);
   Flux<R> listAll(Pageable request);
-  Flux<R> listAll(MultiValueMap<String, String> param);
-  Flux<R> listAll(MultiValueMap<String, String> param, Pageable request);
+  <T>Flux<T> listAll(Pageable request, Class<T> type);
+
 
   Flux<R> listAllWithToken(String token);
+  <T>Flux<T> listAllWithToken(String token, Class<T> type);
   Flux<R> listAllWithToken(String token, Pageable request);
-  Flux<R> listAllWithToken(String token, MultiValueMap<String, String> param);
-  Flux<R> listAllWithToken(String token, MultiValueMap<String, String> param, Pageable request);
+  <T>Flux<T> listAllWithToken(String token, Pageable request, Class<T> type);
+
 
   Mono<TmfPage<Flux<R>>> listPaged();
+  <T>Mono<TmfPage<Flux<T>>> listPaged(Class<T> type);
   Mono<TmfPage<Flux<R>>> listPaged(Pageable request);
-  Mono<TmfPage<Flux<R>>> listPaged(MultiValueMap<String, String> param);
-  Mono<TmfPage<Flux<R>>> listPaged(MultiValueMap<String, String> param, Pageable request);
+  <T>Mono<TmfPage<Flux<T>>> listPaged(Pageable request, Class<T> type);
+
 
   Mono<TmfPage<Flux<R>>> listPagedWithToken(String token);
+  <T>Mono<TmfPage<Flux<T>>> listPagedWithToken(String token, Class<T> type);
   Mono<TmfPage<Flux<R>>> listPagedWithToken(String token, Pageable request);
-  Mono<TmfPage<Flux<R>>> listPagedWithToken(String token, MultiValueMap<String, String> param);
-  Mono<TmfPage<Flux<R>>> listPagedWithToken(String token, MultiValueMap<String, String> param, Pageable request);
+  <T>Mono<TmfPage<Flux<T>>> listPagedWithToken(String token, Pageable request, Class<T> type);
 
   Mono<R> post(C obj);
   Mono<R> post(C obj, TmfRequestContext requestContext);
