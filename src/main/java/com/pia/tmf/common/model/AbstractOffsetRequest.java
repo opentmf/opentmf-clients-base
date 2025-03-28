@@ -2,6 +2,7 @@ package com.pia.tmf.common.model;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 
 /**
  * Represents an abstract offset-based pagination request.
@@ -43,7 +44,7 @@ public abstract class AbstractOffsetRequest implements Pageable {
    * @return The sorting configuration for the request.
    */
   @Override
-  public Sort getSort() {
+  public @NonNull Sort getSort() {
     return this.sort;
   }
 
@@ -83,7 +84,7 @@ public abstract class AbstractOffsetRequest implements Pageable {
     return this.offset;
   }
 
-  public Pageable previousOrFirst() {
+  public @NonNull Pageable previousOrFirst() {
     return this.hasPrevious() ? this.previous() : this.first();
   }
 

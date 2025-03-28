@@ -22,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.util.LinkedMultiValueMap;
 import reactor.test.StepVerifier;
 
 /**
@@ -122,7 +121,7 @@ class GenericTestClientIT {
     addingMockServerData(path, 40);
     MockServerUtils.setUpDynamicGetListCallback(path);
 
-    var response = genericTestClient.listAll(new LinkedMultiValueMap<>(), Pageable.ofSize(5));
+    var response = genericTestClient.listAll(Pageable.ofSize(5));
     StepVerifier.create(response)
         .expectNextCount(40)
         .verifyComplete();

@@ -1,160 +1,180 @@
 # tmf-clients-base
-**TMF-Clients-Base** Provides the essential classes and implementation logic for communicating with TMF-630 compliant backends.
+
+**TMF-Clients-Base** provides essential classes and implementation logic for communicating with TMF-630–compliant backends.
 
 ## Background
-TMF-630 defines REST API Design Guidelines to be followed by any compliant TMF backend solution.
 
-TMF Clients Base is a TMF-630 compliant generic client implementation which uses Spring Webflux to communicate with a TMF compliant backend.
+TMF-630 defines REST API design guidelines that any compliant TMF backend solution should follow.
 
-The following features are provided out of the box:
+TMF Clients Base is a generic client implementation that is TMF-630 compliant and uses Spring Webflux to communicate with a TMF–compliant backend.
+
+The following features are available out of the box:
 - Follows TMF-630 recommendations.
-- Ability to use either basic auth or openid auth pia-web-client.
-- Provides many ready-to-use methods with and without access token parameters through its TmfClient interface.
+- Supports both basic authentication and OpenID authentication via the pia-web-client.
+- Offers numerous ready-to-use methods with and without access token parameters through its `TmfClient` interface.
 - Dynamically retrieves access tokens using the provided TokenService.
-- Ability to specify only the requested columns (fields=).
-- Ability to apply a jsonPath at server-side or client-side (filter=).
-- Ability to override the result object type.
-- Ability to retrieve a single page, all pages at once, or any desired page at a time.
+- Allows specifying only the requested columns (using the `fields=` parameter).
+- Allows applying a JSONPath filter on the server or client side (using the `filter=` parameter).
+- Enables overriding the result object type.
+- Supports retrieving a single page, all pages at once, or any desired page.
 
-## TmfClient Interface
-TmfClient is the interface that defines many methods that include get, list, post, patch and delete with dozens of overloaded variants that enable all aspects of TMF-630 recommendations like restricting the returned fields, specifying search parameters through either name-value pairs or jsonPath filters to be applied either at server or the client side, enabling requested page retrievals or even all pages retrieval, automatically.
+## `TmfClient` Interface
 
-The interface uses Java generics for create, update and result class types, and a default base implementation named TmfClientBaseImpl. The whole idea is to easily enable endpoint implementations just by extending this base implementation class and without writing more logic for each and every different TMF based endpoint.
+The `TmfClient` interface defines numerous methods—including `get`, `list`, `post`, `patch`, and `delete`—with dozens of overloaded variants. These methods support TMF-630 recommendations by allowing you to:
+- Restrict returned fields.
+- Specify search parameters via name-value pairs or JSONPath filters (applied on the server or client side).
+- Retrieve specific pages or all pages automatically.
 
-This is the TmfClient interface:
+The interface uses Java generics to specify create, update, and result class types and includes a default base implementation (`TmfClientBaseImpl`). This design allows developers to implement endpoints easily by extending the base class without writing additional logic for each TMF–based endpoint.
+
+This is the `TmfClient` interface:
 
 ```java
 public interface TmfClient<C, U, R> {
-  
-  // these get methods will first retrieve an accessToken
+
+  /** These get methods first retrieve an access token */
   Mono<R> get(String id);
-  Mono<R> get(String id, RetrievalContext retrievalContext);
+  Mono<R> get(String id, TmfRequestContext requestContext);
   <T> Mono<T> get(String id, Class<T> type);
-  <T> Mono<T> get(String id, RetrievalContext retrievalContext, Class<T> type);
+  <T> Mono<T> get(String id, TmfRequestContext requestContext, Class<T> type);
 
-  // these get methods uses the client provided accessToken
+  /** These get methods use the client-provided access token */
   Mono<R> getWithToken(String token, String id);
-  Mono<R> getWithToken(String token, String id, RetrievalContext retrievalContext);
+  Mono<R> getWithToken(String token, String id, TmfRequestContext requestContext);
   <T> Mono<T> getWithToken(String token, String id, Class<T> type);
-  <T> Mono<T> getWithToken(String token, String id, RetrievalContext retrievalContext, Class<T> type);
-  
-  // the list methods serves one page at a time. This group will first retrieve an accessToken  
+  <T> Mono<T> getWithToken(String token, String id, TmfRequestContext requestContext, Class<T> type);
+
+  /** List methods that serve one page at a time (access token retrieved automatically) */
   Flux<R> list();
+  <T> Flux<T> list(Class<T> type);
   Flux<R> list(Pageable request);
-  Flux<R> list(MultiValueMap<String, String> param);
-  Flux<R> list(MultiValueMap<String, String> param, Pageable request);
+  <T> Flux<T> list(Pageable request, Class<T> type);
 
-  // the list methods serves one page at a time. This group will use the clientProvided accessToken
+  /** List methods that serve one page at a time (using the provided access token) */
   Flux<R> listWithToken(String token);
+  <T> Flux<T> listWithToken(String token, Class<T> type);
   Flux<R> listWithToken(String token, Pageable request);
-  Flux<R> listWithToken(String token, MultiValueMap<String, String> param);
-  Flux<R> listWithToken(String token, MultiValueMap<String, String> param, Pageable request);
-  
-  // listAll methods retrieves all pages. This group will first retrieve an accessToken
+  <T> Flux<T> listWithToken(String token, Pageable request, Class<T> type);
+
+  /** listAll methods retrieve all pages (access token retrieved automatically) */
   Flux<R> listAll();
+  <T> Flux<T> listAll(Class<T> type);
   Flux<R> listAll(Pageable request);
-  Flux<R> listAll(MultiValueMap<String, String> param);
-  Flux<R> listAll(MultiValueMap<String, String> param, Pageable request);
+  <T> Flux<T> listAll(Pageable request, Class<T> type);
 
-  // listAll methods retrieves all pages. This group will use the clientProvided accessToken
+  /** listAll methods retrieve all pages (using the provided access token) */
   Flux<R> listAllWithToken(String token);
+  <T> Flux<T> listAllWithToken(String token, Class<T> type);
   Flux<R> listAllWithToken(String token, Pageable request);
-  Flux<R> listAllWithToken(String token, MultiValueMap<String, String> param);
-  Flux<R> listAllWithToken(String token, MultiValueMap<String, String> param, Pageable request);
-  
-  // these methods allow to retrieve a desired page. This group will first retrieve an accessToken
+  <T> Flux<T> listAllWithToken(String token, Pageable request, Class<T> type);
+
+  /** These methods retrieve a page (access token retrieved automatically) */
   Mono<TmfPage<Flux<R>>> listPaged();
+  <T> Mono<TmfPage<Flux<T>>> listPaged(Class<T> type);
   Mono<TmfPage<Flux<R>>> listPaged(Pageable request);
-  Mono<TmfPage<Flux<R>>> listPaged(MultiValueMap<String, String> param);
-  Mono<TmfPage<Flux<R>>> listPaged(MultiValueMap<String, String> param, Pageable request);
+  <T> Mono<TmfPage<Flux<T>>> listPaged(Pageable request, Class<T> type);
 
-  // these methods allow to retrieve a desired page. This group will use the clientProvided accessToken
+  /** These methods retrieve a page (using the provided access token) */
   Mono<TmfPage<Flux<R>>> listPagedWithToken(String token);
+  <T> Mono<TmfPage<Flux<T>>> listPagedWithToken(String token, Class<T> type);
   Mono<TmfPage<Flux<R>>> listPagedWithToken(String token, Pageable request);
-  Mono<TmfPage<Flux<R>>> listPagedWithToken(String token, MultiValueMap<String, String> param);
-  Mono<TmfPage<Flux<R>>> listPagedWithToken(String token, MultiValueMap<String, String> param, Pageable request);
-  
-  // post a single object to create. This group will first retrieve an accessToken
+  <T> Mono<TmfPage<Flux<T>>> listPagedWithToken(String token, Pageable request, Class<T> type);
+
+  /** Post a single object to create (access token retrieved automatically) */
   Mono<R> post(C obj);
-  Mono<R> post(C obj, RetrievalContext retrievalContext);
+  Mono<R> post(C obj, TmfRequestContext requestContext);
   <T> Mono<T> post(C obj, Class<T> type);
-  <T> Mono<T> post(C obj, RetrievalContext retrievalContext, Class<T> type);
+  <T> Mono<T> post(C obj, TmfRequestContext requestContext, Class<T> type);
 
-  // post a single object to create. This group will use the clientProvided accessToken
+  /** Post a single object to create (using the provided access token) */
   Mono<R> postWithToken(String token, C obj);
-  Mono<R> postWithToken(String token, C obj, RetrievalContext retrievalContext);
+  Mono<R> postWithToken(String token, C obj, TmfRequestContext requestContext);
   <T> Mono<T> postWithToken(String token, C obj, Class<T> type);
-  <T> Mono<T> postWithToken(String token, C obj, RetrievalContext retrievalContext, Class<T> type);
-  
-  // merge patch a single object identified by the id. This group will first retrieve an accessToken
+  <T> Mono<T> postWithToken(String token, C obj, TmfRequestContext requestContext, Class<T> type);
+
+  /** Merge patch a single object by its id (access token retrieved automatically) */
   Mono<R> patch(String id, U obj);
-  Mono<R> patch(String id, U obj, RetrievalContext retrievalContext);
+  Mono<R> patch(String id, U obj, TmfRequestContext requestContext);
   <T> Mono<T> patch(String id, U obj, Class<T> type);
-  <T> Mono<T> patch(String id, U obj, RetrievalContext retrievalContext, Class<T> type);
+  <T> Mono<T> patch(String id, U obj, TmfRequestContext requestContext, Class<T> type);
 
-  // merge patch a single object identified by the id. This group will use the clientProvided accessToken
+  /** Merge patch a single object by its id (using the provided access token) */
   Mono<R> patchWithToken(String token, String id, U obj);
-  Mono<R> patchWithToken(String token, String id, U obj, RetrievalContext retrievalContext);
+  Mono<R> patchWithToken(String token, String id, U obj, TmfRequestContext requestContext);
   <T> Mono<T> patchWithToken(String token, String id, U obj, Class<T> type);
-  <T> Mono<T> patchWithToken(String token, String id, U obj, RetrievalContext retrievalContext, Class<T> type);
+  <T> Mono<T> patchWithToken(String token, String id, U obj, TmfRequestContext requestContext, Class<T> type);
 
-  // json patch a single object identified by the id. This group will first retrieve an accessToken
+  /** JSON patch a single object by its id (access token retrieved automatically) */
   Mono<R> patch(String id, JsonPatch jsonPatch);
-  Mono<R> patch(String id, JsonPatch jsonPatch, RetrievalContext retrievalContext);
+  Mono<R> patch(String id, JsonPatch jsonPatch, TmfRequestContext requestContext);
   <T> Mono<T> patch(String id, JsonPatch jsonPatch, Class<T> type);
-  <T> Mono<T> patch(String id, JsonPatch jsonPatch, RetrievalContext retrievalContext, Class<T> type);
+  <T> Mono<T> patch(String id, JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type);
 
-  // json patch a single object identified by the id. This group will first retrieve an accessToken
+  /** JSON patch a single object by its id (using the provided access token) */
   Mono<R> patchWithToken(String token, String id, JsonPatch jsonPatch);
-  Mono<R> patchWithToken(String token, String id, JsonPatch jsonPatch, RetrievalContext retrievalContext);
+  Mono<R> patchWithToken(String token, String id, JsonPatch jsonPatch, TmfRequestContext requestContext);
   <T> Mono<T> patchWithToken(String token, String id, JsonPatch jsonPatch, Class<T> type);
-  <T> Mono<T> patchWithToken(String token, String id, JsonPatch jsonPatch, RetrievalContext retrievalContext, Class<T> type);
-  
-  // delete, first retrieve an accessToken
-  Mono<Void> delete(String id);
+  <T> Mono<T> patchWithToken(String token, String id, JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type);
 
-  // delete, use the client provided accessToken
+  /** Delete a single object by its id (access token retrieved automatically) */
+  Mono<Void> delete(String id);
+  Mono<Void> delete(String id, TmfRequestContext requestContext);
+  <T> Mono<T> delete(String id, Class<T> type);
+  <T> Mono<T> delete(String id, Class<T> type, TmfRequestContext requestContext);
+
+  /** Delete a single object by its id (using the provided access token) */
   Mono<Void> deleteWithToken(String token, String id);
+  Mono<Void> deleteWithToken(String token, String id, TmfRequestContext requestContext);
+  <T> Mono<T> deleteWithToken(String token, String id, Class<T> type);
+  <T> Mono<T> deleteWithToken(String token, String id, Class<T> type, TmfRequestContext requestContext);
 }
 ```
 
-## RetrievalContext
-This class defines a Builder to be able to set the following:
+## `TmfRequestContext`
 
-- The set of fields to include or exclude in the query result.
-- The JSON-based filter to apply to the query.
-- Additional headers as a multi-value map.
+This class provides a builder to enrich requests with the following features:
+- Add query parameters
+- Add headers
+- Apply a JSON filter on the server or client side
+- Specify which fields to include or exclude in the query result
 
-An example configuration:
+Example configuration:
 
 ```java
-    RetrievalContext retrievalContext = RetrievalContext.builder()
-        .withFields("id", "href", "version")
-        .withHeaderValues("header1", "value1")
-        .withHeaderValues("header2", "value2")
-        .withServerJsonFilter("$.attachment[?(@.size==300)]")
-        .build();
+TmfRequestContext requestContext = TmfRequestContext.builder()
+    .withFields("id", "href", "version")
+    .withQueryParameters("param1", "value1")
+    .withQueryParameters("param2", "value2a", "value2b")
+    .withHeaderValues("header1", "value1")
+    .withHeaderValues("header2", "value2")
+    .withServerJsonFilter("$.attachment[?(@.size==300)]")
+    .build();
 ```
 
-## TmfOffsetRequest
-This class implements Pageable interface and allows us to configure a retrieval context.
+## `TmfOffsetRequest`
+
+This class implements the `Pageable` interface and allows you to configure a `TmfRequestContext`.
 
 Sample configuration:
-```java
-    RetrievalContext retrievalContext = RetrievalContext.builder()
-        .withFields("id", "href", "version")
-        .withHeaderValues("header1", "value1")
-        .withHeaderValues("header2", "value2")
-        .withClientJsonFilter("$.attachment[?(@.size==300)]")
-        .build();
 
-    TmfOffsetRequest request = TmfOffsetRequest.of(0, 10,
-            Sort.by(Order.asc("name"), Order.desc("surname")))
-        .withRetrievalContext(retrievalContext);
+```java
+TmfRequestContext requestContext = TmfRequestContext.builder()
+    .withFields("id", "href", "version")
+    .withQueryParameters("param1", "value1")
+    .withQueryParameters("param2", "value2a", "value2b")
+    .withHeaderValues("header1", "value1")
+    .withHeaderValues("header2", "value2")
+    .withServerJsonFilter("$.attachment[?(@.size==300)]")
+    .build();
+
+TmfOffsetRequest request = TmfOffsetRequest.of(0, 10,
+        Sort.by(Order.asc("name"), Order.desc("surname")))
+    .withRequestContext(requestContext);
 ```
 
-## TmfClientProvider
-TmfClientProvider is an interface to be implemented for providing TmfClient implementations. It has only one method: 
+## `TmfClientProvider`
+
+`TmfClientProvider` is an interface for providing `TmfClient` implementations and has a single method:
 
 ```java
 public interface TmfClientProvider<T extends TmfClient<?, ?, ?>> {
@@ -162,17 +182,17 @@ public interface TmfClientProvider<T extends TmfClient<?, ?, ?>> {
   T getTmfClient(TmfClientConfig config, String clientId);
 }
 ```
-The implementations of this provider interface will expose a Spring `@Bean` of a certain TMF Endpoint. The TmfClientConfig is the configuration of a particular TmfClient endpoint, and it is possible to configure many TmfClientConfig items identified by the arbitrary names. 
 
-The following example defines 2 configurations for /test and /another endpoints. The scopes will be applied if the accessToken retrieval should be performed by the relevant TmfClient method, which is a method that doesn't have an accessToken parameter.
+Implementations of this interface expose a Spring `@Bean` for a specific TMF endpoint. The `TmfClientConfig` holds the configuration for a particular `TmfClient` endpoint, and you can configure multiple such items identified by arbitrary names.
 
-The automatic accessToken retrieval and caching magic has been made available through the [pia-web-clients](https://github.com/pia-commons/pia-web-clients) library. The second parameter of the getTmfClient method just accepts the prefix of a configured WebClient, TokenService and ClientProperties beans. For example, if an application configured an openid web client and exposed the three beans with the prefix `"default"` then tmf-clients-base implementation will need and use the following three exposed spring beans:
+The example below defines two configurations for the `/test` and `/another` endpoints. Scopes are applied when the access token retrieval is performed by a `TmfClient` method that does not include an access token parameter.
 
-- defaultWebClient
-- defaultTokenService
-- defaultClientProperties
+The automatic access token retrieval and caching are provided by the [pia-web-clients](https://github.com/pia-commons/pia-web-clients) library. The second parameter of the `getTmfClient` method accepts the prefix of the configured `WebClient`, `TokenService`, and `ClientProperties` beans. For example, if an application configures an OpenID web client and exposes the three beans with the prefix `"default"`, then the tmf-clients-base implementation will use the following Spring beans:
+- `defaultWebClient`
+- `defaultTokenService`
+- `defaultClientProperties`
 
-Of course, the prefix is the choice of the client application's developer. 
+The prefix is chosen by the client application's developer.
 
 ```yaml
 pia:
@@ -200,10 +220,11 @@ pia:
         application: test-app
 ```
 
-## GenericClientProvider
-GenericClientProvider uses Object as the Create, Update and Result class types, which is suitable to be used with any TMF compliant backend.
+## `GenericClientProvider`
 
-If the result class type is not explicitly specified, a LinkedHashMap<String, Object> will be returned containing all values within the returned JSON object.
+`GenericClientProvider` uses `Object` as the default type for creation, update, and result, making it suitable for any TMF–compliant backend.
+
+If the result type is not specified explicitly, the returned JSON object will be mapped to a `LinkedHashMap<String, Object>`.
 
 Here is an example of exposing a GenericClient with the previously configured `default` web client:
 
@@ -226,30 +247,43 @@ public class GenericClientConfig {
 And then in a service:
 
 ```java
+import org.springframework.util.Assert;
+
 @Service
 @RequiredArgsConstructor
 public class AnotherServiceImpl implements AnotherService {
-  
+
   private final GenericClient genericTestClient;
-  
+
   @Override
   public void anotherMethod() {
-    // For example, returned object will be an instance of LinkedHashMap<String, Object>
+    // For example, the returned object will be an instance of LinkedHashMap<String, Object>
     Mono<Object> jsonResult = genericTestClient.get("1");
 
-    // Or, like this
+    // Or, like this:
     Mono<Sample> jsonResult = genericTestClient.get("1", Sample.class);
 
-    // For list methods, specifying a return class type is currently not possible
-    // You can do collectList on the Flux to get List<LinkedHashMap<String, Object>>
-    // then you can convert each record into any class of choice.
+    // List methods map each returned Flux item to LinkedHashMap<String, Object>
+    genericTestClient.list()
+        .doOnNext(o -> Assert.isTrue(o instanceof LinkedHashMap))
+        .doOnComplete(() -> System.out.println("Completed"))
+        .subscribe();
+    
+    // You can also use a specific class type as the return type
+    genericTestClient.list(Sample.class)
+        .doOnNext(o -> Assert.isTrue(o instanceof Sample))
+        .doOnComplete(() -> System.out.println("Completed"))
+        .subscribe();
   }
 }
 ```
+
 ## Maven Dependency
-Any TMF Client Provider will include this dependency. However, if your use case is enough to use the GenericClient, then you can import the maven dependency like this:
+
+Any TMF Client Provider includes this dependency. However, if your use case only requires the GenericClient, you can import the Maven dependency as follows:
 
 ### Import PiA Commons Dependencies
+
 ```xml
 <dependencyManagement>
   <dependency>
@@ -261,26 +295,42 @@ Any TMF Client Provider will include this dependency. However, if your use case 
   </dependency>
 </dependencyManagement>
 ```
+
 ### Add tmf-clients-base Module
+
 ```xml
 <dependency>
     <groupId>com.pia.commons</groupId>
     <artifactId>tmf-clients-base</artifactId>
 </dependency>
 ```
+
 ## Version History
+
 ### 1.0.0
-- Initial Version
+- Initial version
+
 ### 1.0.1
 - Updates pia-webclients to version 1.0.4
+
 ### 1.0.2
 - Updates pia-webclients to version 1.0.5
+
 ### 1.0.3
 - Updates pia-webclients to version 1.0.6
 - Updates documentation
+
 ### 1.0.4
-- Updates to pia-web-clients 1.0.8, for fewer dependencies for the reactive WebClient.
+- Updates to pia-web-clients 1.0.8 for fewer dependencies for the reactive WebClient
 - Updates Spring Boot version to 3.4.1
+
 ### 1.0.5
-- Changes the types of the GenericClient from String to Object to cover broader use cases.
+- Changes the types of the GenericClient from String to Object to cover broader use cases
 - Updates Spring Boot version to 3.4.3
+
+### 1.1.0 (Backward Incompatible)
+- Renames the `RetrievalContext` to `TmfRequestContext`
+- Moves query parameters from the `TmfClient` interface to `TmfRequestContext`.
+- It is now possible to specify return class types for the list methods in the `TmfClient` interface.
+- Enabled query parameters for `post`, `patch`, and `delete` methods too.
+- Added many `delete` variants to allow `TmfRequestContext` and return class type.

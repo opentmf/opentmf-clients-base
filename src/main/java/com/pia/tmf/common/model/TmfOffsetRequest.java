@@ -4,6 +4,7 @@ import java.util.Set;
 import lombok.Getter;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.lang.NonNull;
 import org.springframework.util.MultiValueMap;
 
 /**
@@ -50,7 +51,7 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
    * @return A new TmfOffsetRequest object representing the next page.
    */
   @Override
-  public Pageable next() {
+  public @NonNull Pageable next() {
     return new TmfOffsetRequest(
         this.getOffset() + this.getPageSize(),
         this.getPageSize(),
@@ -82,7 +83,7 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
    * @return A new TmfOffsetRequest object representing the first page.
    */
   @Override
-  public Pageable first() {
+  public @NonNull Pageable first() {
     return new TmfOffsetRequest(0L, this.getPageSize(), this.getSort(), this.requestContext);
   }
 
@@ -93,7 +94,7 @@ public class TmfOffsetRequest extends AbstractOffsetRequest {
    * @return A new TmfOffsetRequest object with the specified page number.
    */
   @Override
-  public Pageable withPage(int pageNumber) {
+  public @NonNull Pageable withPage(int pageNumber) {
     return new TmfOffsetRequest(
         ((long) getPageSize() * pageNumber), getPageSize(), getSort(), this.requestContext);
   }
