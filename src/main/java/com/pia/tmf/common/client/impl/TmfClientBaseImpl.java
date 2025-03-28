@@ -6,7 +6,11 @@ import com.pia.client.common.service.api.TokenService;
 import com.pia.tmf.common.client.api.TmfClient;
 import com.pia.tmf.common.config.TmfClientConfigurations.TmfClientConfig;
 import com.pia.tmf.common.exception.TmfClientException;
-import com.pia.tmf.common.model.*;
+import com.pia.tmf.common.model.ErrorMessage;
+import com.pia.tmf.common.model.Scope;
+import com.pia.tmf.common.model.TmfOffsetRequest;
+import com.pia.tmf.common.model.TmfPage;
+import com.pia.tmf.common.model.TmfRequestContext;
 import com.pia.tmf.common.util.TmfClientCommonHeaderUtil;
 import com.pia.tmf.common.util.TmfClientCommonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -433,6 +437,21 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
   }
 
   @Override
+  public Mono<Void> delete(String id, TmfRequestContext requestContext) {
+    return null;
+  }
+
+  @Override
+  public <T> Mono<T> delete(String id, Class<T> type) {
+    return null;
+  }
+
+  @Override
+  public <T> Mono<T> delete(String id, Class<T> type, TmfRequestContext requestContext) {
+    return null;
+  }
+
+  @Override
   public Mono<Void> deleteWithToken(String token, String id) {
     var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
     return TmfClientCommonUtil.deleteRequest(
@@ -442,5 +461,21 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
             token, getClientConfig(), getTokenService()),
         this::handleError,
         getClientProperties());
+  }
+
+  @Override
+  public Mono<Void> deleteWithToken(String token, String id, TmfRequestContext requestContext) {
+    return null;
+  }
+
+  @Override
+  public <T> Mono<T> deleteWithToken(String token, String id, Class<T> type) {
+    return null;
+  }
+
+  @Override
+  public <T> Mono<T> deleteWithToken(String token, String id, Class<T> type,
+      TmfRequestContext requestContext) {
+    return null;
   }
 }
