@@ -124,13 +124,13 @@ class TmfClientCommonUtilIT {
   void test_buildIdUri_withNoId_shouldReturnAnNPE() {
     var clientConfig = configurations.getTmfClients().get(DXL_TMF_CLIENTS);
 
-    Assertions.assertThrows(NullPointerException.class, () -> buildUriWithId(clientConfig, null));
+    Assertions.assertThrows(NullPointerException.class, () -> buildUriWithId(clientConfig, null, null));
   }
 
   @Test
   void test_buildUri_withValidId_shouldReturnAValidURI() {
     var clientConfig = configurations.getTmfClients().get(DXL_TMF_CLIENTS);
-    var results = buildUriWithId(clientConfig, "2");
+    var results = buildUriWithId(clientConfig, "2", null);
     Assertions.assertEquals("/deleteX/2", results.getPath());
   }
 
@@ -211,7 +211,7 @@ class TmfClientCommonUtilIT {
   @Test
   void test_postRequest_withNoAccessToken_shouldReturnNPE() {
     var clientConfig = configurations.getTmfClients().get(APIX_TMF_CLIENTS);
-    var uri = buildUriWithId(clientConfig, "2");
+    var uri = buildUriWithId(clientConfig, "2", null);
     Assertions.assertThrows(IllegalArgumentException.class, () ->
         postRequest(
             shWebClient,
@@ -226,7 +226,7 @@ class TmfClientCommonUtilIT {
   @Test
   void test_postRequest_withNoRequestBody_shouldReturnNPE() {
     var clientConfig = configurations.getTmfClients().get(APIX_TMF_CLIENTS);
-    var uri = buildUriWithId(clientConfig, "2");
+    var uri = buildUriWithId(clientConfig, "2", null);
     var response =
         shTokenService
             .getToken()
@@ -246,7 +246,7 @@ class TmfClientCommonUtilIT {
   @Test
   void test_patchRequest_withNoAccessToken_shouldReturnNPE() {
     var clientConfig = configurations.getTmfClients().get(APIX_TMF_CLIENTS);
-    var uri = buildUriWithId(clientConfig, "2");
+    var uri = buildUriWithId(clientConfig, "2", null);
     Assertions.assertThrows(
         NullPointerException.class,
         () ->
@@ -263,7 +263,7 @@ class TmfClientCommonUtilIT {
   @Test
   void test_patchRequest_withNoJsonPatch_shouldReturnNPE() {
     var clientConfig = configurations.getTmfClients().get(APIX_TMF_CLIENTS);
-    var uri = buildUriWithId(clientConfig, "2");
+    var uri = buildUriWithId(clientConfig, "2", null);
     var response =
         shTokenService
             .getToken()
@@ -284,7 +284,7 @@ class TmfClientCommonUtilIT {
   @Test
   void test_getRequest_withEmptyAccessToken_shouldReturnNPE() {
     var clientConfig = configurations.getTmfClients().get(APIX_TMF_CLIENTS);
-    var uri = buildUriWithId(clientConfig, "2");
+    var uri = buildUriWithId(clientConfig, "2", null);
     Assertions.assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -300,7 +300,7 @@ class TmfClientCommonUtilIT {
   @Test
   void test_getAllRequest_withEmptyAccessToken_shouldReturnNPE() {
     var clientConfig = configurations.getTmfClients().get(APIX_TMF_CLIENTS);
-    var uri = buildUriWithId(clientConfig, "2");
+    var uri = buildUriWithId(clientConfig, "2", null);
     Assertions.assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -1145,7 +1145,7 @@ class TmfClientCommonUtilIT {
   void test_deleteRequest_withInvalidData_shouldThrowTmfException() {
     configurations.getTmfClients().get("dxl-tmf-x-client").setBaseUrl(MockServerUtils.BASE_URL);
     var clientConfig = configurations.getTmfClients().get("dxl-tmf-x-client");
-    var uri = buildUriWithId(clientConfig, "2");
+    var uri = buildUriWithId(clientConfig, "2", null);
     assertThrows(
         IllegalArgumentException.class,
         () -> deleteRequest(shWebClient, uri, null, this::mockHandleError, shClientProperties));
@@ -1155,7 +1155,7 @@ class TmfClientCommonUtilIT {
   void test_deleteRequest_withValidData_shouldReturnOkay() {
     configurations.getTmfClients().get("dxl-tmf-x-client").setBaseUrl(MockServerUtils.BASE_URL);
     var clientConfig = configurations.getTmfClients().get("dxl-tmf-x-client");
-    var uri = buildUriWithId(clientConfig, "2");
+    var uri = buildUriWithId(clientConfig, "2", null);
     MockServerUtils.expectDeleteMethod("deleteX", HttpStatus.OK);
     var response =
         shTokenService
@@ -1178,7 +1178,7 @@ class TmfClientCommonUtilIT {
 
   private URI createURI(String client, String id) {
     var clientConfig = configurations.getTmfClients().get(client);
-    return buildUriWithId(clientConfig, id);
+    return buildUriWithId(clientConfig, id, null);
   }
 
   private void addingMockServerData(String path, int count) {
