@@ -46,9 +46,7 @@ import reactor.core.publisher.Mono;
  * This class provides methods for building URIs, making HTTP requests, handling pagination,
  * registering and unregistering event listeners, and other common functionalities.
  *
- * <p>Author: Isra
- *
- * <p>Author: Yusuf BOZKURT
+ * <p>author: Yusuf BOZKURT
  */
 @Slf4j
 public final class TmfClientCommonUtil {
@@ -712,6 +710,26 @@ public final class TmfClientCommonUtil {
             WebClientUtil.retry(
                 properties.getNumRetries(), Duration.ofMillis(properties.getRetryWaitMillis())))
         .then();
+  }
+
+  public static <T> Mono<T> deleteRequest(
+          WebClient webClient,
+          URI uri,
+          Consumer<HttpHeaders> headersConsumer,
+          Function<ClientResponse, Mono<? extends Throwable>> errorhandler,
+          Class<T> t,
+          BaseClientProperties properties) {
+    validateHeadersConsumer(headersConsumer);
+    return webClient
+            .delete()
+            .uri(uri)
+            .headers(headersConsumer)
+            .retrieve()
+            .onStatus(HttpStatusCode::isError, errorhandler)
+            .bodyToMono(t)
+            .retryWhen(
+                    WebClientUtil.retry(
+                            properties.getNumRetries(), Duration.ofMillis(properties.getRetryWaitMillis())));
   }
 
   /**

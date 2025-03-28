@@ -101,7 +101,7 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public <T> Mono<T> getWithToken(String token, String id, Class<T> type) {
-    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
+    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id, null);
     return TmfClientCommonUtil.getRequest(
         getWebClient(),
         uri,
@@ -438,44 +438,56 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
 
   @Override
   public Mono<Void> delete(String id, TmfRequestContext requestContext) {
-    return null;
+    return getToken(Scope.DELETE).flatMap(token -> deleteWithToken(token, id, requestContext));
   }
 
   @Override
   public <T> Mono<T> delete(String id, Class<T> type) {
-    return null;
+    return getToken(Scope.DELETE).flatMap(token -> deleteWithToken(token, id, type));
   }
 
   @Override
   public <T> Mono<T> delete(String id, Class<T> type, TmfRequestContext requestContext) {
-    return null;
+    return getToken(Scope.DELETE).flatMap(token -> deleteWithToken(token, id, type, requestContext));
   }
 
   @Override
   public Mono<Void> deleteWithToken(String token, String id) {
-    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id);
+    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id, null);
     return TmfClientCommonUtil.deleteRequest(
-        getWebClient(),
-        uri,
-        TmfClientCommonHeaderUtil.prepareHeaderConsumer(
-            token, getClientConfig(), getTokenService()),
-        this::handleError,
-        getClientProperties());
+            getWebClient(),
+            uri,
+            TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
+            this::handleError,
+            getClientProperties());
   }
 
   @Override
   public Mono<Void> deleteWithToken(String token, String id, TmfRequestContext requestContext) {
-    return null;
+    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id, requestContext);
+    return TmfClientCommonUtil.deleteRequest(
+            getWebClient(),
+            uri,
+            TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
+            this::handleError,
+            getClientProperties());
   }
 
   @Override
   public <T> Mono<T> deleteWithToken(String token, String id, Class<T> type) {
-    return null;
+    return deleteWithToken(token, id, type, null);
   }
 
   @Override
   public <T> Mono<T> deleteWithToken(String token, String id, Class<T> type,
       TmfRequestContext requestContext) {
-    return null;
+    var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id, requestContext);
+    return TmfClientCommonUtil.deleteRequest(
+            getWebClient(),
+            uri,
+            TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
+            this::handleError,
+            type,
+            getClientProperties());
   }
 }
