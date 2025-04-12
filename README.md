@@ -1,6 +1,6 @@
-# tmf-clients-base
+# opentmf-clients-base
 
-**TMF-Clients-Base** provides essential classes and implementation logic for communicating with TMF-630–compliant backends.
+**OpenTMF-Clients-Base** provides essential classes and implementation logic for communicating with TMF-630–compliant backends.
 
 ## Background
 
@@ -10,7 +10,7 @@ TMF Clients Base is a generic client implementation that is TMF-630 compliant an
 
 The following features are available out of the box:
 - Follows TMF-630 recommendations.
-- Supports both basic authentication and OpenID authentication via the pia-web-client.
+- Supports both basic authentication and OpenID authentication via opentmf-web-clients libraries.
 - Offers numerous ready-to-use methods with and without access token parameters through its `TmfClient` interface.
 - Dynamically retrieves access tokens using the provided TokenService.
 - Allows specifying only the requested columns (using the `fields=` parameter).
@@ -187,7 +187,7 @@ Implementations of this interface expose a Spring `@Bean` for a specific TMF end
 
 The example below defines two configurations for the `/test` and `/another` endpoints. Scopes are applied when the access token retrieval is performed by a `TmfClient` method that does not include an access token parameter.
 
-The automatic access token retrieval and caching are provided by the [pia-web-clients](https://github.com/pia-commons/pia-web-clients) library. The second parameter of the `getTmfClient` method accepts the prefix of the configured `WebClient`, `TokenService`, and `ClientProperties` beans. For example, if an application configures an OpenID web client and exposes the three beans with the prefix `"default"`, then the tmf-clients-base implementation will use the following Spring beans:
+The automatic access token retrieval and caching are provided by the [opentmf-web-clients](https://github.com/opentmf/opentmf-web-clients) library. The second parameter of the `getTmfClient` method accepts the prefix of the configured `WebClient`, `TokenService`, and `ClientProperties` beans. For example, if an application configures an OpenID web client and exposes the three beans with the prefix `"default"`, then the tmf-clients-base implementation will use the following Spring beans:
 - `defaultWebClient`
 - `defaultTokenService`
 - `defaultClientProperties`
@@ -195,7 +195,7 @@ The automatic access token retrieval and caching are provided by the [pia-web-cl
 The prefix is chosen by the client application's developer.
 
 ```yaml
-pia:
+opentmf:
   tmf-clients:
     test-tmf-client:
       base-url: http://localhost:0080
@@ -211,11 +211,11 @@ pia:
         header2: headerValue2
 
     another-tmf-client:
-      base-url: http://sh-hub-client
+      base-url: http://another-tmf-server
       endpoint: /another
       scopes:
-        get: SH_GET_TMF_MODEL
-        delete: SH_DELETE_TMF_MODEL
+        get: OTHER_GET_TMF_MODEL
+        delete: OTHER_DELETE_TMF_MODEL
       fixed-headers:
         application: test-app
 ```
@@ -282,13 +282,13 @@ public class AnotherServiceImpl implements AnotherService {
 
 Any TMF Client Provider includes this dependency. However, if your use case only requires the GenericClient, you can import the Maven dependency as follows:
 
-### Import PiA Commons Dependencies
+### Import OpenTMF Commons Dependencies
 
 ```xml
 <dependencyManagement>
   <dependency>
-    <groupId>com.pia.commons</groupId>
-    <artifactId>pia-commons-versions</artifactId>
+    <groupId>org.opentmf</groupId>
+    <artifactId>opentmf-versions</artifactId>
     <version>RELEASE</version>
     <type>pom</type>
     <scope>import</scope>
@@ -296,12 +296,12 @@ Any TMF Client Provider includes this dependency. However, if your use case only
 </dependencyManagement>
 ```
 
-### Add tmf-clients-base Module
+### Add opentmf-clients-base Module
 
 ```xml
 <dependency>
-    <groupId>com.pia.commons</groupId>
-    <artifactId>tmf-clients-base</artifactId>
+  <groupId>org.opentmf.client</groupId>
+  <artifactId>opentmf-clients-base</artifactId>
 </dependency>
 ```
 
@@ -334,3 +334,6 @@ Any TMF Client Provider includes this dependency. However, if your use case only
 - It is now possible to specify return class types for the list methods in the `TmfClient` interface.
 - Enabled query parameters for `post`, `patch`, and `delete` methods too.
 - Added many `delete` variants to allow `TmfRequestContext` and return class type.
+
+### 1.1.1
+- Initial open-source version, replacing pia with opentmf

@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>com.pia.commons</groupId>
-	<artifactId>tmf-clients-base</artifactId>
+	<groupId>org.opentmf.client</groupId>
+	<artifactId>opentmf-clients-base</artifactId>
 	<version>1.1.1-SNAPSHOT</version>
+
 	<description>
-		TMF Clients Base is a TMF-630 compliant generic client implementation which uses Spring Webflux
-		to communicate with a TMF compliant backend.
+		OpenTMF Clients Base is a TMF-630 compliant generic client implementation which uses Spring's
+		reactive WebClient to communicate with a TMF compliant backend.
 
 		The following features are provided out of the box:
 		- Uses the dynamically decomposable tmf-models library for the hierarchical TMF model classes.
@@ -20,6 +21,40 @@
 		- Follows TMF-630 recommendations.
 	</description>
 
+	<url>https://github.com/opentmf/opentmf-clients-base</url>
+
+	<organization>
+		<name>PiA Group</name>
+		<url>https://www.pia-group.net/</url>
+	</organization>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A permissive open-source license</comments>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>gokhanus</id>
+			<name>Gokhan Demir</name>
+			<email>gokhan@opentmf.org</email>
+		</developer>
+		<developer>
+			<id>yusuf-bozkurt</id>
+			<name>Yusuf Bozkurt</name>
+			<email>yusuf.bozkurt@pia-team.com</email>
+		</developer>
+		<developer>
+			<id>cezmi-aslan</id>
+			<name>Cezmi Aslan</name>
+			<email>cezmi.aslan@pia-team.com</email>
+		</developer>
+	</developers>
+
 	<properties>
 		<spring-boot.version>3.4.4</spring-boot.version>
 		<java.version>17</java.version>
@@ -27,23 +62,26 @@
 		<maven.compiler.source>${java.version}</maven.compiler.source>
 		<maven.compiler.target>${java.version}</maven.compiler.target>
 
-		<pia-webclients.version>1.0.9</pia-webclients.version>
+		<opentmf-webclients.version>1.1.1</opentmf-webclients.version>
 		<json-path.version>2.9.0</json-path.version>
 		<json-patch.version>1.13</json-patch.version>
 		<mockserver.version>5.15.0</mockserver.version>
-		<jacoco-maven-plugin.version>0.8.12</jacoco-maven-plugin.version>
+		<jacoco-maven-plugin.version>0.8.13</jacoco-maven-plugin.version>
 		<sonar-plugin.version>5.1.0.4751</sonar-plugin.version>
 		<nexus-staging-plugin.version>1.7.0</nexus-staging-plugin.version>
-		<maven-surefire-plugin.version>3.5.2</maven-surefire-plugin.version>
-		<maven-failsafe-plugin.version>3.5.2</maven-failsafe-plugin.version>
+		<maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+		<maven-failsafe-plugin.version>3.5.3</maven-failsafe-plugin.version>
 		<maven-jar-plugin.version>3.4.2</maven-jar-plugin.version>
 		<maven-source-plugin.version>3.3.1</maven-source-plugin.version>
 		<maven-javadoc-plugin.version>3.11.2</maven-javadoc-plugin.version>
 		<maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
 		<maven-enforcer-plugin.version>3.5.0</maven-enforcer-plugin.version>
 		<testcontainers.version>1.20.6</testcontainers.version>
-		<dynamic-mock-expectations.version>1.0.1</dynamic-mock-expectations.version>
+		<opentmf-mockserver.version>1.0.2</opentmf-mockserver.version>
 		<archunit-junit5.version>1.4.0</archunit-junit5.version>
+		<maven-release-plugin.version>3.1.1</maven-release-plugin.version>
+		<maven-gpg-plugin.version>3.2.7</maven-gpg-plugin.version>
+		<central-publishing-maven-plugin.version>0.7.0</central-publishing-maven-plugin.version>
 	</properties>
 
 	<dependencyManagement>
@@ -74,9 +112,9 @@
 			<artifactId>spring-data-commons</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.pia.commons</groupId>
-			<artifactId>pia-webclients-common</artifactId>
-			<version>${pia-webclients.version}</version>
+			<groupId>org.opentmf.client</groupId>
+			<artifactId>opentmf-webclients-common</artifactId>
+			<version>${opentmf-webclients.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.java-json-tools</groupId>
@@ -103,15 +141,15 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.pia.commons</groupId>
-			<artifactId>pia-openid-webclient-provider</artifactId>
-			<version>${pia-webclients.version}</version>
+			<groupId>org.opentmf.client</groupId>
+			<artifactId>opentmf-openid-webclient-provider</artifactId>
+			<version>${opentmf-webclients.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.pia.commons</groupId>
-			<artifactId>pia-basic-webclient-provider</artifactId>
-			<version>${pia-webclients.version}</version>
+			<groupId>org.opentmf.client</groupId>
+			<artifactId>opentmf-basic-webclient-provider</artifactId>
+			<version>${opentmf-webclients.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -149,9 +187,9 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.pia.commons</groupId>
-			<artifactId>dynamic-mock-expectations</artifactId>
-			<version>${dynamic-mock-expectations.version}</version>
+			<groupId>org.opentmf.mockserver</groupId>
+			<artifactId>opentmf-mockserver</artifactId>
+			<version>${opentmf-mockserver.version}</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -159,16 +197,6 @@
 	<build>
 		<pluginManagement>
 			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-enforcer-plugin</artifactId>
-					<version>${maven-enforcer-plugin.version}</version>
-				</plugin>
-				<plugin>
-					<groupId>org.jacoco</groupId>
-					<artifactId>jacoco-maven-plugin</artifactId>
-					<version>${jacoco-maven-plugin.version}</version>
-				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-surefire-plugin</artifactId>
@@ -196,8 +224,23 @@
 				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>${maven-release-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-deploy-plugin</artifactId>
 					<version>${maven-deploy-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.jacoco</groupId>
+					<artifactId>jacoco-maven-plugin</artifactId>
+					<version>${jacoco-maven-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.sonarsource.scanner.maven</groupId>
+					<artifactId>sonar-maven-plugin</artifactId>
+					<version>${sonar-plugin.version}</version>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -206,6 +249,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>${maven-enforcer-plugin.version}</version>
 				<executions>
 					<execution>
 						<id>enforce-maven</id>
@@ -225,14 +269,13 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<configuration>
-					<reportsDirectory>
-						${project.build.directory}/surefire-reports</reportsDirectory>
-				</configuration>
 				<executions>
 					<execution>
 						<goals>
@@ -241,6 +284,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -256,10 +302,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
+				<version>${maven-source-plugin.version}</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
-						<phase>deploy</phase>
 						<goals>
 							<goal>jar-no-fork</goal>
 						</goals>
@@ -269,10 +315,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>${maven-javadoc-plugin.version}</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
-						<phase>deploy</phase>
 						<goals>
 							<goal>jar</goal>
 						</goals>
@@ -285,34 +331,35 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>${nexus-staging-plugin.version}</version>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>${maven-gpg-plugin.version}</version>
 				<executions>
 					<execution>
-						<id>default-deploy</id>
-						<phase>deploy</phase>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
 						<goals>
-							<goal>deploy</goal>
+							<goal>sign</goal>
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
 				<configuration>
-					<serverId>pia-commons-release</serverId>
-					<nexusUrl>https://nexus.dnext-pia.com/</nexusUrl>
-					<skipStaging>true</skipStaging>
+					<useReleaseProfile>false</useReleaseProfile>
+					<goals>deploy</goals>
 				</configuration>
 			</plugin>
 			<plugin>
-				<groupId>org.sonarsource.scanner.maven</groupId>
-				<artifactId>sonar-maven-plugin</artifactId>
-				<version>${sonar-plugin.version}</version>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<version>${central-publishing-maven-plugin.version}</version>
+				<extensions>true</extensions>
+				<configuration>
+					<publishingServerId>publish-to-central</publishingServerId>
+					<autoPublish>true</autoPublish>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.jacoco</groupId>
@@ -371,20 +418,10 @@
 		</plugins>
 	</build>
 
-	<distributionManagement>
-		<repository>
-			<id>pia-commons-release</id>
-			<url>https://nexus.dnext-pia.com/repository/pia-commons-release/</url>
-		</repository>
-		<snapshotRepository>
-			<id>pia-commons-snapshot</id>
-			<url>https://nexus.dnext-pia.com/repository/pia-commons-snapshot/</url>
-		</snapshotRepository>
-	</distributionManagement>
-
 	<scm>
-		<connection>scm:git:git@github.com:pia-commons/tmf-clients-base.git</connection>
-		<developerConnection>scm:git:git@github.com:pia-commons/tmf-clients-base.git</developerConnection>
+		<url>https://github.com/opentmf/opentmf-clients-base</url>
+		<connection>scm:git:git@github.com:opentmf/opentmf-clients-base.git</connection>
+		<developerConnection>scm:git:git@github.com:opentmf/opentmf-clients-base.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 

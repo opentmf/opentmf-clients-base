@@ -1,1 +1,1 @@
-com.pia.tmf.common.config.TmfClientsAutoConfiguration
+org.opentmf.common.config.TmfClientsAutoConfiguration

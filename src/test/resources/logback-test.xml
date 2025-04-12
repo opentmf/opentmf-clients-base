@@ -5,7 +5,7 @@
     </encoder>
   </appender>
 
-  <logger name="com.pia" level="TRACE" />
+  <logger name="org.opentmf" level="TRACE" />
   <logger name="reactor.netty" level="WARN" />
   <logger name="io.netty" level="WARN" />
   <logger name="org.mockserver" level="INFO" />
