@@ -337,3 +337,7 @@ Any TMF Client Provider includes this dependency. However, if your use case only
 
 ### 1.1.1
 - Initial open-source version, replacing pia with opentmf
+
+### 1.1.2
+- Started handling zero length responses
+
