@@ -1,9 +1,12 @@
 package org.opentmf.common.service;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockserver.model.MediaType.*;
 import static org.opentmf.common.service.MockServerHelper.addingMockServerData;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +24,7 @@ import org.opentmf.common.helper.MockServerUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import reactor.test.StepVerifier;
 
@@ -41,6 +45,62 @@ class GenericTestClientIT {
     path = "/" + RandomStringUtils.secure().nextAlphabetic(5);
     testClientConfig.setBaseUrl(MockServerUtils.BASE_URL);
     testClientConfig.setEndpoint(path);
+  }
+
+  @Test
+  void testGet_notImplementedNoBody_throwsExpectedException() {
+    MockServerUtils.get(
+        path + "/123", 1, APPLICATION_OCTET_STREAM, HttpStatus.NOT_IMPLEMENTED);
+    StepVerifier.create(genericTestClient.get("123"))
+        .expectErrorMatches(
+            error -> {
+              if (error instanceof TmfClientException e) {
+                assertEquals(
+                    "HTTP 501 Not Implemented. Reason: null. Message: Got 501 Not Implemented on "
+                        + "GET " + MockServerUtils.BASE_URL
+                        + path
+                        + "/123",
+                    e.getMessage());
+                Assertions.assertSame(HttpStatusCode.valueOf(501), e.getStatusCode());
+                return true;
+              }
+              return false;
+            })
+        .verify();
+  }
+
+  @Test
+  void testGet_basRequestWithTextBody_throwsExpectedException() {
+    MockServerUtils.get(
+            path + "/124", 1, TEXT_PLAIN, BAD_REQUEST, "Plain text".getBytes(UTF_8));
+    StepVerifier.create(genericTestClient.get("124"))
+            .expectErrorMatches(
+                    error -> {
+                      if (error instanceof TmfClientException e) {
+                        assertEquals("HTTP 400 (Bad Request): Plain text", e.getMessage());
+                        Assertions.assertSame(HttpStatusCode.valueOf(400), e.getStatusCode());
+                        return true;
+                      }
+                      return false;
+                    })
+            .verify();
+  }
+
+  @Test
+  void testGet_basRequestWithBinaryBody_throwsExpectedException() {
+    MockServerUtils.get(
+            path + "/125", 1, ANY_IMAGE_TYPE, BAD_REQUEST, new byte[]{'\0', '\1', '\2'});
+    StepVerifier.create(genericTestClient.get("125"))
+            .expectErrorMatches(
+                    error -> {
+                      if (error instanceof TmfClientException e) {
+                        assertEquals("HTTP 400 (Bad Request): <binary payload>", e.getMessage());
+                        Assertions.assertSame(HttpStatusCode.valueOf(400), e.getStatusCode());
+                        return true;
+                      }
+                      return false;
+                    })
+            .verify();
   }
 
   @Test

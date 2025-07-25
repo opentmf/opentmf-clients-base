@@ -341,3 +341,7 @@ Any TMF Client Provider includes this dependency. However, if your use case only
 ### 1.1.2
 - Started handling zero length responses
 
+### 1.1.3
+- Improves default error handling logic
+- Updates Spring Boot version to 3.5.4
+

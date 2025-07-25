@@ -14,13 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.matchers.MatchType;
 import org.mockserver.matchers.Times;
-import org.mockserver.model.BodyWithContentType;
-import org.mockserver.model.Headers;
-import org.mockserver.model.HttpRequest;
-import org.mockserver.model.HttpResponse;
-import org.mockserver.model.JsonBody;
-import org.mockserver.model.Parameter;
-import org.mockserver.model.StringBody;
+import org.mockserver.model.*;
 import org.opentmf.common.model.TmfClientCommonsConstants;
 import org.opentmf.commons.util.JacksonUtil;
 import org.opentmf.mockserver.callback.DynamicDeleteCallback;
@@ -263,14 +257,27 @@ public class MockServerUtils {
         .respond(response().withStatusCode(responseStatus.value()));
   }
 
-  public static void get(String path, int count, HttpStatus responseStatus, Object responseBody) {
-
+  public static void get(String path, int count, MediaType contentType, HttpStatus responseStatus) {
     clientAndServer
         .when(request().withMethod("GET").withPath(path), Times.exactly(count))
         .respond(
             response()
-                .withContentType(APPLICATION_JSON)
-                .withBody(new JsonBody(objectToJson(responseBody)))
+                .withContentType(contentType)
+                .withStatusCode(responseStatus.value()));
+  }
+
+  public static void get(
+      String path,
+      int count,
+      MediaType contentType,
+      HttpStatus responseStatus,
+      byte[] responseBody) {
+    clientAndServer
+        .when(request().withMethod("GET").withPath(path), Times.exactly(count))
+        .respond(
+            response()
+                .withContentType(contentType)
+                .withBody(responseBody)
                 .withStatusCode(responseStatus.value()));
   }
 

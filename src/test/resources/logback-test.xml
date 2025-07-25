@@ -8,7 +8,7 @@
   <logger name="org.opentmf" level="TRACE" />
   <logger name="reactor.netty" level="WARN" />
   <logger name="io.netty" level="WARN" />
-  <logger name="org.mockserver" level="INFO" />
+  <logger name="org.mockserver" level="WARN" />
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />

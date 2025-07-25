@@ -92,10 +92,9 @@ public class TmfRequestContext {
       return this;
     }
 
-    private Builder withJsonFilter(JsonFilter filter) {
+    private void withJsonFilter(JsonFilter filter) {
       Assert.isNull(this.jsonFilter, CAN_BE_SET_ONLY_ONCE);
       this.jsonFilter = filter;
-      return this;
     }
 
     public Builder withHeaderValues(@NonNull MultiValueMap<String, String> headerParameters) {
@@ -141,11 +140,20 @@ public class TmfRequestContext {
     return new Builder();
   }
 
-  public static Builder builder(TmfRequestContext requestContext) {
-    return builder()
-        .withFields(requestContext.getFields())
-        .withJsonFilter(requestContext.getJsonFilter())
-        .withHeaderValues(requestContext.getHeaderParameters())
-        .withQueryParameters(requestContext.getQueryParameters());
+  public static Builder builder(@NonNull TmfRequestContext requestContext) {
+    var b = builder();
+    if (requestContext.getFields() != null) {
+      b.withFields(requestContext.getFields());
+    }
+    if (requestContext.getJsonFilter() != null) {
+      b.withJsonFilter(requestContext.getJsonFilter());
+    }
+    if (requestContext.getHeaderParameters() != null) {
+      b.withHeaderValues(requestContext.getHeaderParameters());
+    }
+    if (requestContext.getQueryParameters() != null) {
+      b.withQueryParameters(requestContext.getQueryParameters());
+    }
+    return b;
   }
 }
