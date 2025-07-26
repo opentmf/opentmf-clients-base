@@ -5,10 +5,12 @@ import static org.springframework.util.StringUtils.hasText;
 
 import com.github.fge.jsonpatch.JsonPatch;
 import com.jayway.jsonpath.JsonPath;
+
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -29,10 +31,7 @@ import org.opentmf.common.model.TmfRequestContext;
 import org.opentmf.commons.util.JacksonUtil;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -808,16 +807,7 @@ public final class TmfClientCommonUtil {
     return rangeEnd - rangeStart + 1;
   }
 
-  public static <T> TmfClientException createException(
-      HttpStatusCode httpStatusCode, Class<? extends TmfClientException> exception) {
-    try {
-      return exception.getDeclaredConstructor(HttpStatusCode.class).newInstance(httpStatusCode);
-    } catch (Exception e) {
-      throw new IllegalArgumentException("Exception class misses required constructor.", e);
-    }
-  }
-
-  public static <T> TmfClientException createException(
+  public static TmfClientException createException(
       HttpStatusCode httpStatusCode,
       ErrorMessage errorMessage,
       Class<? extends TmfClientException> exception) {
@@ -828,6 +818,39 @@ public final class TmfClientCommonUtil {
     } catch (Exception e) {
       throw new IllegalArgumentException("Exception class misses required constructor.", e);
     }
+  }
+
+  public static TmfClientException createException(
+      HttpStatusCode httpStatusCode,
+      String message,
+      Class<? extends TmfClientException> exception) {
+    try {
+      return exception
+          .getDeclaredConstructor(HttpStatusCode.class, String.class)
+          .newInstance(httpStatusCode, message);
+    } catch (Exception e) {
+      throw new IllegalArgumentException(
+          "Can't instantiate " + exception.getSimpleName() + " with httpStatusCode and String", e);
+    }
+  }
+
+  public static TmfClientException createException(ClientResponse r, Class<? extends TmfClientException> e) {
+    ErrorMessage errorMessage = new ErrorMessage();
+    HttpStatusCode httpStatusCode = r.statusCode();
+    errorMessage.setCode(String.valueOf(httpStatusCode.value()));
+    var status = findStatusText(httpStatusCode);
+    errorMessage.setStatus(status);
+    errorMessage.setMessage(
+            String.format(
+                    "Got %d %s on %s %s",
+                    httpStatusCode.value(), status, r.request().getMethod(), r.request().getURI()));
+    return createException(httpStatusCode, errorMessage, e);
+  }
+
+  public static String findStatusText(HttpStatusCode sc) {
+    return Optional.ofNullable(HttpStatus.resolve(sc.value()))
+            .map(HttpStatus::getReasonPhrase)
+            .orElse("Unknown Status");
   }
 
   private static void validateHeadersConsumer(Consumer<HttpHeaders> headersConsumer) {

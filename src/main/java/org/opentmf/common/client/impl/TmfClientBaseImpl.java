@@ -1,6 +1,12 @@
 package org.opentmf.common.client.impl;
 
+import static org.opentmf.common.util.BodyExtractionUtil.*;
+import static org.opentmf.common.util.TmfClientCommonUtil.createException;
+import static org.opentmf.common.util.TmfClientCommonUtil.findStatusText;
+
 import com.github.fge.jsonpatch.JsonPatch;
+import java.util.Optional;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.opentmf.client.common.model.BaseClientProperties;
 import org.opentmf.client.common.service.api.TokenService;
@@ -15,7 +21,7 @@ import org.opentmf.common.model.TmfRequestContext;
 import org.opentmf.common.util.TmfClientCommonHeaderUtil;
 import org.opentmf.common.util.TmfClientCommonUtil;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
@@ -47,40 +53,32 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
    * @param resp The ClientResponse containing information about the error.
    * @return A Mono emitting an error or an empty Mono if the error is handled.
    */
-  protected Mono<TmfClientException> handleError(ClientResponse resp) {
+  protected Mono<? extends Throwable> handleError(ClientResponse resp) {
     var status = resp.statusCode();
-    log.debug("Handling httpStatus = {} for {} {}",
-        status,
-        resp.request().getMethod(),
-        resp.request().getURI());
+    var req = resp.request();
+    log.debug("Handling httpStatus = {} for {} {}", status, req.getMethod(), req.getURI());
 
-    // build once
-    TmfClientException defaultEx = TmfClientCommonUtil.createException(status, getExceptionType());
+    Supplier<TmfClientException> defaultEx = () -> createException(resp, getExceptionType());
 
-    // only parse JSON payloads
-    MediaType ct = resp
-        .headers()
-        .contentType()
-        .orElse(MediaType.APPLICATION_OCTET_STREAM);
+    return resp.bodyToMono(byte[].class)
+        .map(bytes -> buildFromBody(status, bytes).orElseGet(defaultEx))
+        .switchIfEmpty(Mono.fromSupplier(defaultEx))
+        .onErrorResume(e -> Mono.fromSupplier(defaultEx))
+        .flatMap(Mono::error);
+  }
 
-    if (!ct.isCompatibleWith(MediaType.APPLICATION_JSON)) {
-      // not JSON → immediately return the default exception
-      return Mono.just(defaultEx);
+  private Optional<TmfClientException> buildFromBody(HttpStatusCode status, byte[] body) {
+    if (body == null || body.length == 0) return Optional.empty();
+    ErrorMessage em = tryParseJson(body);
+    if (em != null && hasMeaningfulFields(em)) {
+      log.trace("JSON body found in error payload {}", em);
+      return Optional.of(createException(status, em, getExceptionType()));
     }
-
-    return resp
-        .bodyToMono(ErrorMessage.class)
-        // map valid JSON → context‑rich exception
-        .map(err -> TmfClientCommonUtil.createException(status, err, getExceptionType()))
-        // if empty body (e.g. JSON endpoint that returns 204) → default
-        .defaultIfEmpty(defaultEx)
-        // if JSON parsing blows up → log & default
-        .onErrorResume(
-            e -> {
-              log.debug("Failed to deserialize error payload, falling back to default", e);
-              return Mono.just(defaultEx);
-            }
-        );
+    String raw = safeString(body);
+    if (!raw.contains(String.valueOf(status.value()))) {
+      raw = "HTTP " + status.value() + " (" + findStatusText(status) + "): " + raw;
+    }
+    return Optional.of(createException(status, raw, getExceptionType()));
   }
 
   protected final Mono<String> getToken(Scope scope) {
