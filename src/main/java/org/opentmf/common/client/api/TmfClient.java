@@ -72,13 +72,13 @@ public interface TmfClient<C, U, R> {
   <T> Mono<T> postWithToken(String token, C obj, Class<T> type);
   <T> Mono<T> postWithToken(String token, C obj, TmfRequestContext requestContext, Class<T> type);
 
-  /** Merge patch a single object by its id (access token retrieved automatically) */
+  /** Merge-patch a single object by its id (access token retrieved automatically) */
   Mono<R> patch(String id, U obj);
   Mono<R> patch(String id, U obj, TmfRequestContext requestContext);
   <T> Mono<T> patch(String id, U obj, Class<T> type);
   <T> Mono<T> patch(String id, U obj, TmfRequestContext requestContext, Class<T> type);
 
-  /** Merge patch a single object by its id (using the provided access token) */
+  /** Merge-patch a single object by its id (using the provided access token) */
   Mono<R> patchWithToken(String token, String id, U obj);
   Mono<R> patchWithToken(String token, String id, U obj, TmfRequestContext requestContext);
   <T> Mono<T> patchWithToken(String token, String id, U obj, Class<T> type);

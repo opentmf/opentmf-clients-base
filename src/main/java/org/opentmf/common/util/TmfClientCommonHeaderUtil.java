@@ -51,7 +51,7 @@ public class TmfClientCommonHeaderUtil {
       String authToken, TmfRequestContext requestContext, TokenService tokenService) {
     validateAuthToken(authToken);
     return combineConsumers(
-        setAuthorization(authToken, tokenService), addRetrievalContextHeaders(requestContext));
+        setAuthorization(authToken, tokenService), addRequestContextHeaders(requestContext));
   }
 
   public static Consumer<HttpHeaders> prepareHeaderConsumer(
@@ -62,7 +62,7 @@ public class TmfClientCommonHeaderUtil {
     validateAuthToken(authToken);
     return combineConsumers(
         setAuthorization(authToken, tokenService),
-        addRetrievalContextHeaders(requestContext),
+        addRequestContextHeaders(requestContext),
         addTmfConfigFixedHeaders(config));
   }
 
@@ -72,7 +72,7 @@ public class TmfClientCommonHeaderUtil {
         httpHeaders.set(HttpHeaders.AUTHORIZATION, tokenService.getTokenType() + " " + authToken);
   }
 
-  private static Consumer<HttpHeaders> addRetrievalContextHeaders(
+  private static Consumer<HttpHeaders> addRequestContextHeaders(
       TmfRequestContext requestContext) {
     return (HttpHeaders httpHeaders) -> {
       if (requestContext != null) {

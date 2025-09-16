@@ -185,7 +185,7 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
         getWebClient(),
         uri,
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(
-            token, getClientConfig(), getTokenService()),
+            token, getClientConfig(), request, getTokenService()),
         this::handleError,
         type,
         getClientProperties(),
@@ -284,7 +284,7 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
         getWebClient(),
         uri,
         TmfClientCommonHeaderUtil.prepareHeaderConsumer(
-            token, getClientConfig(), getTokenService()),
+            token, getClientConfig(), pageable, getTokenService()),
         this::handleError,
         type,
         getClientProperties(),
@@ -484,7 +484,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
     return TmfClientCommonUtil.deleteRequest(
             getWebClient(),
             uri,
-            TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
+            TmfClientCommonHeaderUtil.prepareHeaderConsumer(
+                    token, getClientConfig(), requestContext, getTokenService()),
             this::handleError,
             getClientProperties());
   }
@@ -501,7 +502,8 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
     return TmfClientCommonUtil.deleteRequest(
             getWebClient(),
             uri,
-            TmfClientCommonHeaderUtil.prepareHeaderConsumer(token, getClientConfig(), getTokenService()),
+            TmfClientCommonHeaderUtil.prepareHeaderConsumer(
+                    token, getClientConfig(), requestContext, getTokenService()),
             this::handleError,
             type,
             getClientProperties());

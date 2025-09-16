@@ -345,3 +345,7 @@ Any TMF Client Provider includes this dependency. However, if your use case only
 - Improves default error handling logic
 - Updates Spring Boot version to 3.5.4
 
+### 1.1.4
+- Fixes request context headers not being applied to the WebClient for list and delete methods
+- Updates Spring Boot version to 3.5.5
+
