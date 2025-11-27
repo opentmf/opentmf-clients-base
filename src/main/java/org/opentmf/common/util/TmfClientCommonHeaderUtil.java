@@ -10,7 +10,6 @@ import org.opentmf.common.model.TmfRequestContext;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 
@@ -91,15 +90,17 @@ public class TmfClientCommonHeaderUtil {
 
   private static void addHeaders(HttpHeaders httpHeaders, Map<String, String> headers) {
     if (headers != null && !headers.isEmpty()) {
-      MultiValueMap<String, String> multiValueMap = new LinkedMultiValueMap<>();
-      headers.forEach(multiValueMap::add);
-      httpHeaders.addAll(multiValueMap);
+      headers.forEach(httpHeaders::add);
     }
   }
 
   private static void addHeaders(HttpHeaders httpHeaders, MultiValueMap<String, String> headers) {
     if (headers != null && !headers.isEmpty()) {
-      httpHeaders.addAll(headers);
+      headers.forEach((key, values) -> {
+        for (String value : values) {
+          httpHeaders.add(key, value);
+        }
+      });
     }
   }
 

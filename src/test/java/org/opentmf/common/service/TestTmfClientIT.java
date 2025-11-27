@@ -261,9 +261,9 @@ class TestTmfClientIT {
   @Test
   void test_getAllListWithPageableQueryAndMultiValueMap_shouldReturnSuccess() {
     addingMockServerData(path, 40);
-    MockServerUtils.setUpDynamicGetListCallback(path, Parameter.param("test", "testData"));
+    MockServerUtils.setUpDynamicGetListCallback(path, Parameter.param("name", "test"));
     var multiValueMap = new LinkedMultiValueMap<String, String>();
-    multiValueMap.add("test", "testData");
+    multiValueMap.add("name", "test");
     var pageable = TmfOffsetRequest.of(Pageable.ofSize(5)).withQueryParameters(multiValueMap);
 
     var response = testTmfClient.listAll(pageable);
@@ -273,9 +273,9 @@ class TestTmfClientIT {
   @Test
   void test_getAllListWithPageableWithQueryAndMultiValueMap_shouldReturnSuccess() {
     addingMockServerData(path, 40);
-    MockServerUtils.setUpDynamicGetListCallback(path, Parameter.param("test", "testData"));
+    MockServerUtils.setUpDynamicGetListCallback(path, Parameter.param("name", "test"));
     var multiValueMap = new LinkedMultiValueMap<String, String>();
-    multiValueMap.add("test", "testData");
+    multiValueMap.add("name", "test");
 
     var response = testTmfClient.listAll(TmfOffsetRequest.of().withQueryParameters(multiValueMap));
     StepVerifier.create(response).expectNextCount(40).verifyComplete();

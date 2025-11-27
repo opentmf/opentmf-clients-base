@@ -1,11 +1,11 @@
 package org.opentmf.common.util;
 
 import static org.opentmf.client.common.util.WebClientUtil.retry;
+import static org.opentmf.common.util.ConverterUtil.toInt;
 import static org.springframework.util.StringUtils.hasText;
 
 import com.github.fge.jsonpatch.JsonPatch;
 import com.jayway.jsonpath.JsonPath;
-
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -801,9 +801,28 @@ public final class TmfClientCommonUtil {
 
   private static int getItemCountFromContentRange(String contentRange) {
     String[] parts = contentRange.replace("items ", "").split("/");
+    if (parts.length != 2) {
+        return 0;
+    }
+    // if totalMatchedCount is 0, then return 0. Handle '*' for unknown size as well
+    if (!parts[1].contains("*") && ((toInt(parts[1].trim(), 0)) == 0)) {
+      return 0;
+    }
+    // '*' can be used to indicate no results returned
+    if (parts[0].contains("*")) {
+      return 0;
+    }
     String[] rangeParts = parts[0].split("-");
+    // this is a safeguard to ensure '-' exists. If not we are assuming no rows returned
+    if (rangeParts.length != 2) {
+      return 0;
+    }
     var rangeStart = Integer.parseInt(rangeParts[0].trim());
     var rangeEnd = Integer.parseInt(rangeParts[1].trim());
+    // handle 0-0/N as well. This is nonstandard and indicates no rows returned
+    if (rangeStart == 0 && rangeEnd == 0) {
+      return 0;
+    }
     return rangeEnd - rangeStart + 1;
   }
 

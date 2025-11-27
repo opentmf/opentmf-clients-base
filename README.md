@@ -268,7 +268,7 @@ public class AnotherServiceImpl implements AnotherService {
         .doOnNext(o -> Assert.isTrue(o instanceof LinkedHashMap))
         .doOnComplete(() -> System.out.println("Completed"))
         .subscribe();
-    
+
     // You can also use a specific class type as the return type
     genericTestClient.list(Sample.class)
         .doOnNext(o -> Assert.isTrue(o instanceof Sample))
@@ -349,3 +349,6 @@ Any TMF Client Provider includes this dependency. However, if your use case only
 - Fixes request context headers not being applied to the WebClient for list and delete methods
 - Updates Spring Boot version to 3.5.5
 
+### 1.1.5
+- Starts handling "Content-Range: items * / total"
+- Updates Spring Boot version to 3.5.8
