@@ -307,48 +307,4 @@ Any TMF Client Provider includes this dependency. However, if your use case only
 
 ## Version History
 
-### 1.0.0
-- Initial version
-
-### 1.0.1
-- Updates pia-webclients to version 1.0.4
-
-### 1.0.2
-- Updates pia-webclients to version 1.0.5
-
-### 1.0.3
-- Updates pia-webclients to version 1.0.6
-- Updates documentation
-
-### 1.0.4
-- Updates to pia-web-clients 1.0.8 for fewer dependencies for the reactive WebClient
-- Updates Spring Boot version to 3.4.1
-
-### 1.0.5
-- Changes the types of the GenericClient from String to Object to cover broader use cases
-- Updates Spring Boot version to 3.4.3
-
-### 1.1.0 (Backward Incompatible)
-- Renames the `RetrievalContext` to `TmfRequestContext`
-- Moves query parameters from the `TmfClient` interface to `TmfRequestContext`.
-- It is now possible to specify return class types for the list methods in the `TmfClient` interface.
-- Enabled query parameters for `post`, `patch`, and `delete` methods too.
-- Added many `delete` variants to allow `TmfRequestContext` and return class type.
-
-### 1.1.1
-- Initial open-source version, replacing pia with opentmf
-
-### 1.1.2
-- Started handling zero length responses
-
-### 1.1.3
-- Improves default error handling logic
-- Updates Spring Boot version to 3.5.4
-
-### 1.1.4
-- Fixes request context headers not being applied to the WebClient for list and delete methods
-- Updates Spring Boot version to 3.5.5
-
-### 1.1.5
-- Starts handling "Content-Range: items * / total"
-- Updates Spring Boot version to 3.5.8
+See [CHANGELOG.md](CHANGELOG.md) for version history and release notes.

@@ -9,12 +9,14 @@ import lombok.Getter;
 import lombok.Setter;
 import org.opentmf.common.model.Scope;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * @author Gokhan Demir
  */
 @Getter
 @Setter
+@Validated
 @ConfigurationProperties(prefix = "opentmf")
 public class TmfClientConfigurations {
 
