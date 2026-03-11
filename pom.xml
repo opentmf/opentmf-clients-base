@@ -302,64 +302,10 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-source-plugin</artifactId>
-				<version>${maven-source-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar-no-fork</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>${maven-javadoc-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-						<configuration>
-							<failOnWarnings>false</failOnWarnings>
-							<failOnError>false</failOnError>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-gpg-plugin</artifactId>
-				<version>${maven-gpg-plugin.version}</version>
-				<executions>
-					<execution>
-						<id>sign-artifacts</id>
-						<phase>verify</phase>
-						<goals>
-							<goal>sign</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-release-plugin</artifactId>
 				<configuration>
-					<useReleaseProfile>false</useReleaseProfile>
+          <releaseProfiles>release</releaseProfiles>
 					<goals>deploy</goals>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.sonatype.central</groupId>
-				<artifactId>central-publishing-maven-plugin</artifactId>
-				<version>${central-publishing-maven-plugin.version}</version>
-				<extensions>true</extensions>
-				<configuration>
-					<publishingServerId>publish-to-central</publishingServerId>
-					<autoPublish>true</autoPublish>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -425,5 +371,69 @@
 		<developerConnection>scm:git:git@github.com:opentmf/opentmf-clients-base.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>${maven-source-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>${maven-javadoc-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+								<configuration>
+									<failOnWarnings>false</failOnWarnings>
+									<failOnError>false</failOnError>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>${maven-gpg-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.sonatype.central</groupId>
+						<artifactId>central-publishing-maven-plugin</artifactId>
+						<version>${central-publishing-maven-plugin.version}</version>
+						<extensions>true</extensions>
+						<configuration>
+							<publishingServerId>publish-to-central</publishingServerId>
+							<autoPublish>true</autoPublish>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 </project>

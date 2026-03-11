@@ -6,6 +6,7 @@ All notable changes to this project are documented in this file.
 
 ### Added
 - CHANGELOG.md with version history; README.md now references it for release notes.
+- A release profile to maven pom.xml and moved maven source, Javadoc, gpg and central publishing plugins to it.
 
 ### Changed
 - Adds `@Validated` to `TmfClientConfigurations` so that `@NotBlank` on `baseUrl` (and nested `TmfClientConfig`) is enforced at startup.
