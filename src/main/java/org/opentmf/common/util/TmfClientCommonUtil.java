@@ -268,12 +268,12 @@ public final class TmfClientCommonUtil {
       BaseClientProperties properties) {
     Objects.requireNonNull(
         jsonPatch, TmfClientCommonsConstants.ERROR_MSG_EMPTY_RESPONSE.formatted(t.getSimpleName()));
-    validateHeadersConsumer(headersConsumer);
+    var headers =
+        prepareAndValidatePatchHeaders(headersConsumer, TmfClientCommonsConstants.MEDIA_TYPE_JSON_PATCH);
     return webClient
         .patch()
         .uri(uri)
-        .headers(headersConsumer)
-        .contentType(MediaType.valueOf(TmfClientCommonsConstants.MEDIA_TYPE_JSON_PATCH))
+        .headers(httpHeaders -> httpHeaders.addAll(headers))
         .bodyValue(jsonPatch)
         .retrieve()
         .onStatus(HttpStatusCode::isError, errorhandler)
@@ -308,12 +308,13 @@ public final class TmfClientCommonUtil {
       BaseClientProperties properties) {
     Objects.requireNonNull(
         body, TmfClientCommonsConstants.ERROR_MSG_EMPTY_RESPONSE.formatted(t.getSimpleName()));
-    validateHeadersConsumer(headersConsumer);
+    var headers =
+        prepareAndValidatePatchHeaders(
+            headersConsumer, TmfClientCommonsConstants.MEDIA_TYPE_MERGE_PATCH);
     return webClient
         .patch()
         .uri(uri)
-        .headers(headersConsumer)
-        .contentType(MediaType.valueOf(TmfClientCommonsConstants.MEDIA_TYPE_MERGE_PATCH))
+        .headers(httpHeaders -> httpHeaders.addAll(headers))
         .bodyValue(body)
         .retrieve()
         .onStatus(HttpStatusCode::isError, errorhandler)
@@ -876,13 +877,30 @@ public final class TmfClientCommonUtil {
     if (headersConsumer != null) {
       var headers = new HttpHeaders();
       headersConsumer.accept(headers);
-      String authorizationHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
-
-      if (!StringUtils.hasText(authorizationHeader)) {
-        throw new IllegalArgumentException(TmfClientCommonsConstants.ERROR_MSG_EMPTY_AUTH_TOKEN);
-      }
+      validateAuthorizationHeader(headers);
     } else {
       throw new IllegalArgumentException(TmfClientCommonsConstants.ERROR_MSG_NULL_HEADERS_CONSUMER);
+    }
+  }
+
+  private static HttpHeaders prepareAndValidatePatchHeaders(
+      Consumer<HttpHeaders> headersConsumer, String defaultContentType) {
+    if (headersConsumer == null) {
+      throw new IllegalArgumentException(TmfClientCommonsConstants.ERROR_MSG_NULL_HEADERS_CONSUMER);
+    }
+    var headers = new HttpHeaders();
+    headersConsumer.accept(headers);
+    validateAuthorizationHeader(headers);
+    if (!headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
+      headers.setContentType(MediaType.valueOf(defaultContentType));
+    }
+    return headers;
+  }
+
+  private static void validateAuthorizationHeader(HttpHeaders headers) {
+    String authorizationHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
+    if (!StringUtils.hasText(authorizationHeader)) {
+      throw new IllegalArgumentException(TmfClientCommonsConstants.ERROR_MSG_EMPTY_AUTH_TOKEN);
     }
   }
 }
