@@ -57,7 +57,7 @@
 	</developers>
 
 	<properties>
-		<spring-boot.version>3.5.11</spring-boot.version>
+		<spring-boot.version>3.5.12</spring-boot.version>
 		<java.version>17</java.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>${java.version}</maven.compiler.source>

@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.7] - 2026-02-27
+
+### Changed
+- PATCH requests now preserve a caller-provided `Content-Type` header; the library sets `application/json-patch+json` or `application/merge-patch+json` only when `Content-Type` is missing.
+- Refactored PATCH header preparation so the headers consumer is invoked once and reused, preventing duplicate side effects during request construction.
+
 ## [1.1.6] - 2026-03-11
 
 ### Added
