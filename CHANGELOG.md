@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.8] - 2026-02-27
+
+### Changed
+- POST requests now preserve a caller-provided `Content-Type` header; defaults to `application/json` when absent.
+- PATCH requests now log a WARN when the caller-provided `Content-Type` does not match the expected patch media type.
+- Refactored header preparation for POST and PATCH so the headers consumer is invoked only once, preventing duplicate side effects.
+
 ## [1.1.7] - 2026-02-27
 
 ### Changed

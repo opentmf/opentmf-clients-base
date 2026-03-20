@@ -230,11 +230,11 @@ public final class TmfClientCommonUtil {
       BaseClientProperties properties) {
     Objects.requireNonNull(
         body, TmfClientCommonsConstants.ERROR_MSG_EMPTY_RESPONSE.formatted(t.getSimpleName()));
-    validateHeadersConsumer(headersConsumer);
+    var headers = prepareAndValidateHeaders(headersConsumer, MediaType.APPLICATION_JSON);
     return webClient
         .post()
         .uri(uri)
-        .headers(headersConsumer)
+        .headers(httpHeaders -> httpHeaders.addAll(headers))
         .bodyValue(body)
         .retrieve()
         .onStatus(HttpStatusCode::isError, errorhandler)
@@ -884,7 +884,19 @@ public final class TmfClientCommonUtil {
   }
 
   private static HttpHeaders prepareAndValidatePatchHeaders(
-      Consumer<HttpHeaders> headersConsumer, String defaultContentType) {
+      Consumer<HttpHeaders> headersConsumer, String expectedContentType) {
+    var headers =
+        prepareAndValidateHeaders(headersConsumer, MediaType.valueOf(expectedContentType));
+    MediaType contentType = headers.getContentType();
+    if (contentType != null && !contentType.toString().startsWith(expectedContentType)) {
+      log.warn("PATCH request has Content-Type '{}' but expected '{}'. "
+          + "Consider updating your headers configuration.", contentType, expectedContentType);
+    }
+    return headers;
+  }
+
+  private static HttpHeaders prepareAndValidateHeaders(
+      Consumer<HttpHeaders> headersConsumer, MediaType defaultContentType) {
     if (headersConsumer == null) {
       throw new IllegalArgumentException(TmfClientCommonsConstants.ERROR_MSG_NULL_HEADERS_CONSUMER);
     }
@@ -892,7 +904,7 @@ public final class TmfClientCommonUtil {
     headersConsumer.accept(headers);
     validateAuthorizationHeader(headers);
     if (!headers.containsKey(HttpHeaders.CONTENT_TYPE)) {
-      headers.setContentType(MediaType.valueOf(defaultContentType));
+      headers.setContentType(defaultContentType);
     }
     return headers;
   }
