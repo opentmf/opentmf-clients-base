@@ -13,8 +13,12 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import com.github.fge.jackson.jsonpointer.JsonPointer;
 import com.github.fge.jackson.jsonpointer.JsonPointerException;
+import com.github.fge.jsonpatch.AddOperation;
 import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchOperation;
 import com.github.fge.jsonpatch.ReplaceOperation;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Assertions;
@@ -26,6 +30,7 @@ import org.opentmf.common.config.TestClientAutoConfiguration;
 import org.opentmf.common.config.TestClientProvider;
 import org.opentmf.common.config.TestTmfClient;
 import org.opentmf.common.config.TmfClientConfigurations;
+import org.opentmf.common.exception.TmfClientException;
 import org.opentmf.common.helper.MockServerUtils;
 import org.opentmf.common.helper.TestResponseClass;
 import org.opentmf.common.helper.TestResponseModel;
@@ -37,6 +42,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.util.LinkedMultiValueMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -558,6 +565,142 @@ class TestTmfClientIT {
             testResponseModel -> {
               assertNotNull(testResponseModel);
               assertTrue(testResponseModel.contains("test_patch"));
+            })
+        .verifyComplete();
+  }
+
+  private static JsonPatch buildAddCollectionPatch(int operations) throws JsonPointerException {
+    List<JsonPatchOperation> ops = new ArrayList<>();
+    for (int i = 0; i < operations; i++) {
+      var node = getTestData();
+      node.put("orderNumber", i);
+      ops.add(new AddOperation(new JsonPointer("/"), node));
+    }
+    return new JsonPatch(ops);
+  }
+
+  @Test
+  void test_patchCollection_withMultiOpPatch_shouldReturnListInOrder()
+      throws JsonPointerException {
+    String responseBody =
+        "[{\"id\":\"a-1\",\"name\":\"first\"},"
+            + "{\"id\":\"a-2\",\"name\":\"second\"},"
+            + "{\"id\":\"a-3\",\"name\":\"third\"}]";
+    MockServerUtils.setUpCollectionJsonPatchCallback(path, responseBody, HttpStatus.OK);
+    var patch = buildAddCollectionPatch(3);
+
+    Mono<List<TestResponseModel>> response = testTmfClient.patchCollection(patch);
+
+    StepVerifier.create(response)
+        .assertNext(
+            list -> {
+              assertNotNull(list);
+              assertEquals(3, list.size());
+              assertEquals("a-1", list.get(0).getId());
+              assertEquals("first", list.get(0).getName());
+              assertEquals("a-2", list.get(1).getId());
+              assertEquals("a-3", list.get(2).getId());
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  void test_patchCollection_withCustomReturnType_shouldDeserializeIntoList()
+      throws JsonPointerException {
+    String responseBody =
+        "[{\"id\":\"r-1\",\"name\":\"alpha\",\"description\":\"d1\"},"
+            + "{\"id\":\"r-2\",\"name\":\"beta\",\"description\":\"d2\"}]";
+    MockServerUtils.setUpCollectionJsonPatchCallback(path, responseBody, HttpStatus.OK);
+    var patch = buildAddCollectionPatch(2);
+
+    Mono<List<TestResponseClass>> response =
+        testTmfClient.patchCollection(patch, TestResponseClass.class);
+
+    StepVerifier.create(response)
+        .assertNext(
+            list -> {
+              assertNotNull(list);
+              assertEquals(2, list.size());
+              assertEquals("r-1", list.get(0).getId());
+              assertEquals("alpha", list.get(0).getName());
+              assertEquals("r-2", list.get(1).getId());
+              assertEquals("beta", list.get(1).getName());
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  void test_patchCollectionWithToken_shouldReturnList() throws JsonPointerException {
+    String responseBody = "[{\"id\":\"t-1\",\"name\":\"with-token\"}]";
+    MockServerUtils.setUpCollectionJsonPatchCallback(path, responseBody, HttpStatus.OK);
+    var patch = buildAddCollectionPatch(1);
+
+    Mono<List<TestResponseModel>> response = testTmfClient.patchCollectionWithToken("token", patch);
+
+    StepVerifier.create(response)
+        .assertNext(
+            list -> {
+              assertNotNull(list);
+              assertEquals(1, list.size());
+              assertEquals("t-1", list.get(0).getId());
+              assertEquals("with-token", list.get(0).getName());
+            })
+        .verifyComplete();
+  }
+
+  @Test
+  void test_patchCollection_with4xx_shouldEmitTmfClientException() throws JsonPointerException {
+    MockServerUtils.setUpCollectionJsonPatchErrorCallback(path, HttpStatus.BAD_REQUEST);
+    var patch = buildAddCollectionPatch(2);
+
+    Mono<List<TestResponseModel>> response = testTmfClient.patchCollection(patch);
+
+    StepVerifier.create(response)
+        .expectErrorMatches(
+            error -> {
+              if (error instanceof TmfClientException tmfClientException) {
+                Assertions.assertSame(
+                    HttpStatusCode.valueOf(400), tmfClientException.getStatusCode());
+                return true;
+              }
+              return false;
+            })
+        .verify();
+  }
+
+  @Test
+  void test_patchCollection_with5xx_shouldEmitTmfClientException() throws JsonPointerException {
+    MockServerUtils.setUpCollectionJsonPatchErrorCallback(path, HttpStatus.INTERNAL_SERVER_ERROR);
+    var patch = buildAddCollectionPatch(2);
+
+    Mono<List<TestResponseModel>> response = testTmfClient.patchCollection(patch);
+
+    StepVerifier.create(response)
+        .expectErrorMatches(
+            error -> {
+              if (error instanceof TmfClientException tmfClientException) {
+                Assertions.assertSame(
+                    HttpStatusCode.valueOf(500), tmfClientException.getStatusCode());
+                return true;
+              }
+              return false;
+            })
+        .verify();
+  }
+
+  @Test
+  void test_patchCollection_withEmptyPatch_shouldStillCallServer() {
+    String responseBody = "[]";
+    MockServerUtils.setUpCollectionJsonPatchCallback(path, responseBody, HttpStatus.OK);
+    var patch = new JsonPatch(Collections.emptyList());
+
+    Mono<List<TestResponseModel>> response = testTmfClient.patchCollection(patch);
+
+    StepVerifier.create(response)
+        .assertNext(
+            list -> {
+              assertNotNull(list);
+              assertTrue(list.isEmpty());
             })
         .verifyComplete();
   }

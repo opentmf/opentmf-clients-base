@@ -1,6 +1,7 @@
 package org.opentmf.common.client.api;
 
 import com.github.fge.jsonpatch.JsonPatch;
+import java.util.List;
 import org.opentmf.common.model.TmfPage;
 import org.opentmf.common.model.TmfRequestContext;
 import org.springframework.data.domain.Pageable;
@@ -95,6 +96,34 @@ public interface TmfClient<C, U, R> {
   Mono<R> patchWithToken(String token, String id, JsonPatch jsonPatch, TmfRequestContext requestContext);
   <T> Mono<T> patchWithToken(String token, String id, JsonPatch jsonPatch, Class<T> type);
   <T> Mono<T> patchWithToken(String token, String id, JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type);
+
+  /**
+   * Collection-level JSON Patch (TMF v4 high-performance bulk-creation pattern).
+   *
+   * <p>Issues {@code PATCH} against the collection root (no {@code /{id}} suffix) with
+   * content-type {@code application/json-patch+json}. The request body is an RFC 6902 JSON Patch
+   * (typically a sequence of {@code add} operations on path {@code "/"}, each carrying one full
+   * resource), and the server responds with a JSON array of created resources in the same order
+   * as the patch operations.
+   *
+   * <p>This complements {@link #patch(String, JsonPatch)} which targets a single resource by id;
+   * {@code patchCollection} targets the collection itself.
+   *
+   * <p>Access token is retrieved automatically.
+   */
+  Mono<List<R>> patchCollection(JsonPatch jsonPatch);
+  Mono<List<R>> patchCollection(JsonPatch jsonPatch, TmfRequestContext requestContext);
+  <T> Mono<List<T>> patchCollection(JsonPatch jsonPatch, Class<T> type);
+  <T> Mono<List<T>> patchCollection(JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type);
+
+  /**
+   * Collection-level JSON Patch (TMF v4 high-performance bulk-creation pattern), using the
+   * provided access token. See {@link #patchCollection(JsonPatch)} for behavior.
+   */
+  Mono<List<R>> patchCollectionWithToken(String token, JsonPatch jsonPatch);
+  Mono<List<R>> patchCollectionWithToken(String token, JsonPatch jsonPatch, TmfRequestContext requestContext);
+  <T> Mono<List<T>> patchCollectionWithToken(String token, JsonPatch jsonPatch, Class<T> type);
+  <T> Mono<List<T>> patchCollectionWithToken(String token, JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type);
 
   /** Delete a single object by its id (access token retrieved automatically) */
   Mono<Void> delete(String id);

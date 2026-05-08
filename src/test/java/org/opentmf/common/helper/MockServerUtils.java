@@ -117,6 +117,39 @@ public class MockServerUtils {
         .respond(new DynamicJsonPatchCallback());
   }
 
+  /**
+   * Sets up a static expectation for collection-level JSON Patch (PATCH on the collection root, no
+   * id segment) returning the supplied JSON array body.
+   */
+  public static void setUpCollectionJsonPatchCallback(
+      String path, String responseBody, HttpStatus httpStatus) {
+    clientAndServer
+        .when(
+            request()
+                .withMethod(HttpMethod.PATCH.name())
+                .withPath(path)
+                .withHeader("Content-Type", TmfClientCommonsConstants.MEDIA_TYPE_JSON_PATCH))
+        .respond(
+            response()
+                .withStatusCode(httpStatus.value())
+                .withContentType(APPLICATION_JSON)
+                .withBody(json(responseBody)));
+  }
+
+  /**
+   * Sets up a status-only expectation for collection-level JSON Patch (no body), useful for error
+   * scenarios.
+   */
+  public static void setUpCollectionJsonPatchErrorCallback(String path, HttpStatus httpStatus) {
+    clientAndServer
+        .when(
+            request()
+                .withMethod(HttpMethod.PATCH.name())
+                .withPath(path)
+                .withHeader("Content-Type", TmfClientCommonsConstants.MEDIA_TYPE_JSON_PATCH))
+        .respond(response().withStatusCode(httpStatus.value()));
+  }
+
   public static void setUpDynamicMergePatchCallback(String path) {
     clientAndServer
         .when(
