@@ -1,5 +1,11 @@
 # opentmf-clients-base
 
+> **Maintenance mode — Spring Boot 3 only.** This library is no longer receiving new features and
+> exists in this form to support existing Spring Boot 3 deployments. The successor is
+> **`org.opentmf.client:opentmf-api-clients`**, which targets Spring Boot 4 and ships
+> `RestTemplate` and `RestClient` implementations alongside the `WebClient` implementation that is
+> the only option here. New projects should adopt the successor.
+
 **OpenTMF-Clients-Base** provides essential classes and implementation logic for communicating with TMF-630–compliant backends.
 
 ## Background
