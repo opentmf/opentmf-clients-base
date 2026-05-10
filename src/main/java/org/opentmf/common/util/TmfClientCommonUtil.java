@@ -284,6 +284,50 @@ public final class TmfClientCommonUtil {
   }
 
   /**
+   * Executes a collection-level PATCH request (JSON Patch on the collection root) to the specified
+   * URI with the provided JSON patch and access token, expecting a JSON array response. This
+   * supports the TMF v4 high-performance bulk-creation pattern where the request body is an RFC
+   * 6902 JSON Patch carrying a sequence of {@code add} operations on path {@code "/"}, and the
+   * response is a JSON array of created resources in the same order as the patch operations.
+   *
+   * @param webClient The WebClient instance to use for making the request.
+   * @param uri The URI to which the PATCH request is made (collection root, no id segment).
+   * @param jsonPatch The JSON patch to apply.
+   * @param headersConsumer The authentication token used for authorization.
+   * @param errorhandler Function to handle errors.
+   * @param t The class type of each element in the expected response array.
+   * @param properties The properties governing the behavior of the request.
+   * @param <T> The type of each element in the expected response array.
+   * @return A Mono emitting the list of response objects.
+   * @throws NullPointerException if any of the required parameters is null.
+   */
+  public static <T> Mono<List<T>> patchRequestList(
+      WebClient webClient,
+      URI uri,
+      JsonPatch jsonPatch,
+      Consumer<HttpHeaders> headersConsumer,
+      Function<ClientResponse, Mono<? extends Throwable>> errorhandler,
+      Class<T> t,
+      BaseClientProperties properties) {
+    Objects.requireNonNull(
+        jsonPatch, TmfClientCommonsConstants.ERROR_MSG_EMPTY_RESPONSE.formatted(t.getSimpleName()));
+    var headers =
+        prepareAndValidatePatchHeaders(headersConsumer, TmfClientCommonsConstants.MEDIA_TYPE_JSON_PATCH);
+    return webClient
+        .patch()
+        .uri(uri)
+        .headers(httpHeaders -> httpHeaders.addAll(headers))
+        .bodyValue(jsonPatch)
+        .retrieve()
+        .onStatus(HttpStatusCode::isError, errorhandler)
+        .bodyToFlux(t)
+        .collectList()
+        .retryWhen(
+            WebClientUtil.retry(
+                properties.getNumRetries(), Duration.ofMillis(properties.getRetryWaitMillis())));
+  }
+
+  /**
    * Executes a PATCH request to the specified URI with the provided body and access token, handling
    * errors and retries as per the provided properties.
    *

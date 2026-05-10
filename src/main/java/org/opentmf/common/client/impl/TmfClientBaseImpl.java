@@ -5,6 +5,7 @@ import static org.opentmf.common.util.TmfClientCommonUtil.createException;
 import static org.opentmf.common.util.TmfClientCommonUtil.findStatusText;
 
 import com.github.fge.jsonpatch.JsonPatch;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
@@ -437,6 +438,60 @@ public abstract class TmfClientBaseImpl<C, U, R> implements TmfClient<C, U, R> {
       Class<T> type) {
     var uri = TmfClientCommonUtil.buildUriWithId(getClientConfig(), id, requestContext);
     return TmfClientCommonUtil.patchRequest(
+        getWebClient(),
+        uri,
+        jsonPatch,
+        TmfClientCommonHeaderUtil.prepareHeaderConsumer(
+            token, getClientConfig(), requestContext, getTokenService()),
+        this::handleError,
+        type,
+        getClientProperties());
+  }
+
+  @Override
+  public Mono<List<R>> patchCollection(JsonPatch jsonPatch) {
+    return patchCollection(jsonPatch, getType());
+  }
+
+  @Override
+  public Mono<List<R>> patchCollection(JsonPatch jsonPatch, TmfRequestContext requestContext) {
+    return patchCollection(jsonPatch, requestContext, getType());
+  }
+
+  @Override
+  public <T> Mono<List<T>> patchCollection(JsonPatch jsonPatch, Class<T> type) {
+    return patchCollection(jsonPatch, null, type);
+  }
+
+  @Override
+  public <T> Mono<List<T>> patchCollection(
+      JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type) {
+    return getToken(Scope.PATCH)
+        .flatMap(token -> patchCollectionWithToken(token, jsonPatch, requestContext, type));
+  }
+
+  @Override
+  public Mono<List<R>> patchCollectionWithToken(String token, JsonPatch jsonPatch) {
+    return patchCollectionWithToken(token, jsonPatch, getType());
+  }
+
+  @Override
+  public Mono<List<R>> patchCollectionWithToken(
+      String token, JsonPatch jsonPatch, TmfRequestContext requestContext) {
+    return patchCollectionWithToken(token, jsonPatch, requestContext, getType());
+  }
+
+  @Override
+  public <T> Mono<List<T>> patchCollectionWithToken(
+      String token, JsonPatch jsonPatch, Class<T> type) {
+    return patchCollectionWithToken(token, jsonPatch, null, type);
+  }
+
+  @Override
+  public <T> Mono<List<T>> patchCollectionWithToken(
+      String token, JsonPatch jsonPatch, TmfRequestContext requestContext, Class<T> type) {
+    var uri = TmfClientCommonUtil.buildUri(getClientConfig(), requestContext);
+    return TmfClientCommonUtil.patchRequestList(
         getWebClient(),
         uri,
         jsonPatch,

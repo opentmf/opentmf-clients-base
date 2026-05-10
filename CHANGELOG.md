@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.9] - 2026-05-10
+
+### Added
+- Collection-level JSON Patch support on `TmfClient` / `TmfClientBaseImpl`. Adds 4 + 4
+  `patchCollection(...)` / `patchCollectionWithToken(...)` overloads that issue a `PATCH` against
+  the collection root (no `/{id}` segment) with content-type `application/json-patch+json` and
+  return `Mono<List<R>>` (or `Mono<List<T>>` with a custom return type). This supports the TMF v4
+  high-performance bulk-creation pattern (RFC 6902 JSON Patch with `add /` operations). Pure
+  addition: no existing signatures change.
+
 ## [1.1.8] - 2026-02-27
 
 ### Changed
