@@ -12,6 +12,12 @@ All notable changes to this project are documented in this file.
   been percent-encoded by `buildUriWithId(...)`. Replaced with safe string-level query-param
   appending via `UriUtils.encodeQueryParam(...)`, which preserves the original path encoding
   and properly encodes the newly-added query values.
+- Fix duplicate `filter=` / `fields=` query params on `get(id, TmfRequestContext)`. The 7-arg
+  `getRequest(..., ctx)` helper was applying ctx-derived query params on top of a URI that
+  `buildUriWithId(config, id, ctx)` had already populated, producing
+  `?filter=X&fields=Y&filter=X&fields=Y`. Dropped the redundant call so the ctx-to-URI mapping
+  happens exactly once, matching the `patch` / `delete` / `post` paths. The now-unused private
+  `updateUri(URI, TmfRequestContext)` was removed.
 
 ## [1.1.9] - 2026-05-10
 

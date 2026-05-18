@@ -33,17 +33,6 @@ class TmfClientCommonUtilTests {
     }
   }
 
-  private static URI invokeUpdateUri(URI uri, TmfRequestContext ctx) {
-    try {
-      Method method = TmfClientCommonUtil.class.getDeclaredMethod(
-          "updateUri", URI.class, TmfRequestContext.class);
-      method.setAccessible(true);
-      return (URI) method.invoke(null, uri, ctx);
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   private static TmfClientConfig config() {
     var cfg = new TmfClientConfig();
     cfg.setBaseUrl("http://example.com");
@@ -85,23 +74,15 @@ class TmfClientCommonUtilTests {
   }
 
   @Test
-  void updateUri_emptyCtx_doesNotReEncodePath() {
-    URI base = TmfClientCommonUtil.buildUriWithId(config(), COMPOSITE_ID);
-    URI result = invokeUpdateUri(base, TmfRequestContext.builder().build());
-    assertThat(result.toString()).endsWith("/" + EXPECTED_ENCODED_ID);
-    assertThat(result.toString()).doesNotContain("%25");
-  }
-
-  @Test
-  void updateUri_ctxWithFieldsAndFilter_preservesPathEncoding() {
-    URI base = TmfClientCommonUtil.buildUriWithId(config(), COMPOSITE_ID);
+  void buildUriWithId_withCtxFieldsAndFilter_appliesOnce() {
     TmfRequestContext ctx = TmfRequestContext.builder()
         .withServerJsonFilter("name=='x'")
         .withFields("id", "name")
         .build();
-    URI result = invokeUpdateUri(base, ctx);
-    assertThat(result.toString()).contains("/" + EXPECTED_ENCODED_ID);
-    assertThat(result.toString()).contains("filter=").contains("fields=");
-    assertThat(result.toString()).doesNotContain("%25");
+    URI uri = TmfClientCommonUtil.buildUriWithId(config(), "42", ctx);
+    long filterCount = uri.toString().split("filter=", -1).length - 1;
+    long fieldsCount = uri.toString().split("fields=", -1).length - 1;
+    assertThat(filterCount).as("filter= occurrences in %s", uri).isEqualTo(1);
+    assertThat(fieldsCount).as("fields= occurrences in %s", uri).isEqualTo(1);
   }
 }

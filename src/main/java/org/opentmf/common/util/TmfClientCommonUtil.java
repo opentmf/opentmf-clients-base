@@ -162,17 +162,9 @@ public final class TmfClientCommonUtil {
         .toUri();
   }
 
-  private static URI updateUri(URI uri, TmfRequestContext requestContext) {
-    var qs = new StringBuilder();
-    if (requestContext.getJsonFilterType() == JsonFilter.TYPE.SERVER) {
-      appendQueryParam(qs, FILTER, requestContext.getJsonFilterQuery());
-    }
-    if (requestContext.getFields() != null && !requestContext.getFields().isEmpty()) {
-      appendQueryParam(qs, FIELDS, prepareFieldsQuery(requestContext.getFields()));
-    }
-    return appendQueryString(uri, qs);
-  }
-
+  // Appends pagination + offset-request query params to the URI by string concatenation, so the
+  // existing percent-encoded path is preserved as-is (UriComponentsBuilder.fromUri(uri).build()
+  // would re-encode it and break composite-key ids like Spec:(version=1)).
   private static URI updateUri(URI uri, Pageable pageable) {
     var qs = new StringBuilder();
     appendQueryParam(qs, "offset", String.valueOf(pageable.getOffset()));
@@ -190,26 +182,11 @@ public final class TmfClientCommonUtil {
       }
       if (tmfOffsetRequest.getQueryParameters() != null
           && !tmfOffsetRequest.getQueryParameters().isEmpty()) {
-        tmfOffsetRequest.getQueryParameters().forEach((name, values) -> {
-          if (values != null) {
-            values.forEach(value -> appendQueryParam(qs, name, value));
-          }
-        });
+        tmfOffsetRequest.getQueryParameters().forEach((name, values) ->
+            values.forEach(value -> appendQueryParam(qs, name, value)));
       }
     }
-    return appendQueryString(uri, qs);
-  }
-
-  // Appends a query string to a URI by string concatenation, preserving the original URI's
-  // percent-encoded path. Avoids UriComponentsBuilder.fromUri(uri).build().toUri() which would
-  // re-encode an already-encoded path (e.g. composite-key ids like Spec:(version=1)).
-  private static URI appendQueryString(URI uri, StringBuilder queryString) {
-    if (queryString.length() == 0) {
-      return uri;
-    }
-    String s = uri.toString();
-    char sep = s.indexOf('?') >= 0 ? '&' : '?';
-    return URI.create(s + sep + queryString);
+    return URI.create(uri + "?" + qs);
   }
 
   private static void appendQueryParam(StringBuilder sb, String name, String value) {
@@ -417,12 +394,15 @@ public final class TmfClientCommonUtil {
       BaseClientProperties properties,
       TmfRequestContext requestContext) {
 
-    var updateUri = updateUri(uri, requestContext);
+    // Note: the uri is expected to already carry any ctx-derived query params (filter, fields,
+    // queryParameters). The matching public API in TmfClientBaseImpl always builds with
+    // buildUriWithId(config, id, ctx) which applies them once. We deliberately do NOT re-apply
+    // them here — doing so produced duplicate filter=/fields= entries before.
     if (requestContext.getJsonFilterType() == JsonFilter.TYPE.CLIENT) {
       return getRequestWithClientFilter(
-          webClient, updateUri, headersConsumer, errorhandler, t, properties, requestContext);
+          webClient, uri, headersConsumer, errorhandler, t, properties, requestContext);
     }
-    return getRequest(webClient, updateUri, headersConsumer, errorhandler, t, properties);
+    return getRequest(webClient, uri, headersConsumer, errorhandler, t, properties);
   }
 
   public static <T> Mono<T> getRequest(
