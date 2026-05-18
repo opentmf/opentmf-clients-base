@@ -7,6 +7,7 @@ import static org.springframework.util.StringUtils.hasText;
 import com.github.fge.jsonpatch.JsonPatch;
 import com.jayway.jsonpath.JsonPath;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +38,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -161,38 +163,60 @@ public final class TmfClientCommonUtil {
   }
 
   private static URI updateUri(URI uri, TmfRequestContext requestContext) {
-    var uriComponentsBuilder = UriComponentsBuilder.fromUri(uri);
+    var qs = new StringBuilder();
     if (requestContext.getJsonFilterType() == JsonFilter.TYPE.SERVER) {
-      uriComponentsBuilder.queryParam(FILTER, requestContext.getJsonFilterQuery());
+      appendQueryParam(qs, FILTER, requestContext.getJsonFilterQuery());
     }
     if (requestContext.getFields() != null && !requestContext.getFields().isEmpty()) {
-      uriComponentsBuilder.queryParam(FIELDS, prepareFieldsQuery(requestContext.getFields()));
+      appendQueryParam(qs, FIELDS, prepareFieldsQuery(requestContext.getFields()));
     }
-    return uriComponentsBuilder.build().toUri();
+    return appendQueryString(uri, qs);
   }
 
   private static URI updateUri(URI uri, Pageable pageable) {
-    var uriComponentsBuilder = UriComponentsBuilder.fromUri(uri);
-    uriComponentsBuilder.queryParam("offset", pageable.getOffset());
-    uriComponentsBuilder.queryParam("limit", pageable.getPageSize());
+    var qs = new StringBuilder();
+    appendQueryParam(qs, "offset", String.valueOf(pageable.getOffset()));
+    appendQueryParam(qs, "limit", String.valueOf(pageable.getPageSize()));
     if (!pageable.getSort().isEmpty()) {
-      var sortQuery = sortStringQuery(pageable.getSort());
-      uriComponentsBuilder.queryParam("sort", sortQuery);
+      appendQueryParam(qs, "sort", sortStringQuery(pageable.getSort()));
     }
 
     if (pageable instanceof TmfOffsetRequest tmfOffsetRequest) {
       if (tmfOffsetRequest.getJsonFilterTYpe() == JsonFilter.TYPE.SERVER) {
-        uriComponentsBuilder.queryParam(FILTER, tmfOffsetRequest.getJsonFilterQuery());
+        appendQueryParam(qs, FILTER, tmfOffsetRequest.getJsonFilterQuery());
       }
       if (tmfOffsetRequest.getFields() != null && !tmfOffsetRequest.getFields().isEmpty()) {
-        uriComponentsBuilder.queryParam(FIELDS, prepareFieldsQuery(tmfOffsetRequest.getFields()));
+        appendQueryParam(qs, FIELDS, prepareFieldsQuery(tmfOffsetRequest.getFields()));
       }
       if (tmfOffsetRequest.getQueryParameters() != null
           && !tmfOffsetRequest.getQueryParameters().isEmpty()) {
-        uriComponentsBuilder.queryParams(tmfOffsetRequest.getQueryParameters());
+        tmfOffsetRequest.getQueryParameters().forEach((name, values) -> {
+          if (values != null) {
+            values.forEach(value -> appendQueryParam(qs, name, value));
+          }
+        });
       }
     }
-    return uriComponentsBuilder.build().toUri();
+    return appendQueryString(uri, qs);
+  }
+
+  // Appends a query string to a URI by string concatenation, preserving the original URI's
+  // percent-encoded path. Avoids UriComponentsBuilder.fromUri(uri).build().toUri() which would
+  // re-encode an already-encoded path (e.g. composite-key ids like Spec:(version=1)).
+  private static URI appendQueryString(URI uri, StringBuilder queryString) {
+    if (queryString.length() == 0) {
+      return uri;
+    }
+    String s = uri.toString();
+    char sep = s.indexOf('?') >= 0 ? '&' : '?';
+    return URI.create(s + sep + queryString);
+  }
+
+  private static void appendQueryParam(StringBuilder sb, String name, String value) {
+    if (sb.length() > 0) {
+      sb.append('&');
+    }
+    sb.append(name).append('=').append(UriUtils.encodeQueryParam(value, StandardCharsets.UTF_8));
   }
 
   private static String sortStringQuery(Sort sort) {

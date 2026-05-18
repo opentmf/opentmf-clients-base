@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [1.1.10] - 2026-05-18
+
+### Fixed
+- Fix double percent-encoding of resource path segments on `get(id, TmfRequestContext)` when
+  the id contains RFC 3986 reserved characters (e.g. TMF composite keys like
+  `Spec:(version=1)`). The private `updateUri(...)` helpers were doing
+  `UriComponentsBuilder.fromUri(uri).build().toUri()`, which re-encoded a path that had already
+  been percent-encoded by `buildUriWithId(...)`. Replaced with safe string-level query-param
+  appending via `UriUtils.encodeQueryParam(...)`, which preserves the original path encoding
+  and properly encodes the newly-added query values.
+
 ## [1.1.9] - 2026-05-10
 
 ### Added
